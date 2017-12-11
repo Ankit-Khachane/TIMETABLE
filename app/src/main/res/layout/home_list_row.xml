@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:ignore="MissingPrefix">
+
+    <LinearLayout
+        android:id="@+id/bar"
+        android:layout_width="15dp"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/data_row"
+        android:layout_alignParentLeft="true"
+        android:layout_alignTop="@+id/data_row"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="5dp"
+        android:background="@drawable/button"
+        android:orientation="horizontal">
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/data_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_toEndOf="@+id/bar"
+        android:layout_toRightOf="@+id/bar"
+        android:background="@drawable/litsitem_background"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/time_tv"
+            fontPath="fonts/Montserrat-Light.otf"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="20dp"
+            android:paddingRight="10dp"
+            android:paddingTop="2dp"
+            android:text="9.00 - 10.00 PM"
+            android:textAllCaps="true"
+            android:textColor="#c8ffffff"
+            android:textSize="16sp"
+            android:textStyle="bold"/>
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="1dip"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:background="#ffffff"
+            />
+
+        <TextView
+            android:id="@+id/Sub_tv"
+            fontPath="fonts/Montserrat-Medium.otf"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="20dp"
+            android:paddingRight="10dp"
+            android:text="MICROPROCESSOR"
+            android:textAllCaps="true"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:textStyle="bold"/>
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="1dip"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:background="#ffffff"
+            />
+
+        <TextView
+            android:id="@+id/detail_tv"
+            fontPath="fonts/Montserrat-Medium.otf"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingBottom="5dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="10dp"
+            android:paddingTop="2dp"
+            android:text="PROF : RNM  |  Room No : "
+            android:textColor="@android:color/white"
+            android:textSize="10sp"
+            android:textStyle="bold"/>
+    </LinearLayout>
+
+</RelativeLayout>

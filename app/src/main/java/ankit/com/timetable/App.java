@@ -1,7 +1,9 @@
 package ankit.com.timetable;
 
-import android.app.Application;
 
+import com.activeandroid.ActiveAndroid;
+import com.activeandroid.Configuration;
+import com.activeandroid.app.Application;
 import com.parse.Parse;
 
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
@@ -14,6 +16,8 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        Configuration dbconf = new Configuration.Builder(this).setDatabaseName("table.db").create();
+        ActiveAndroid.initialize(dbconf, true);
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
                 .setDefaultFontPath("fonts/Montserrat-Medium.otf")
                 .setFontAttrId(R.attr.fontPath)

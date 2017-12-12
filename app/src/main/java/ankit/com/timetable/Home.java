@@ -26,6 +26,7 @@ import com.parse.ParseQuery;
 import com.yarolegovich.lovelydialog.LovelyChoiceDialog;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import ankit.com.timetable.orm.TimeTable;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class Home extends AppCompatActivity {
@@ -89,15 +91,59 @@ public class Home extends AppCompatActivity {
         p = new Preference(this);
 
         if (!p.getFirstStarup() && p.getBatch() == "") {
+//            first call batch selection operation from listed dialog,
+//            and collect batch from user input and store it in =selectedBatch
+//            TODO: 2- Add Internet Check Mechanisum and guie user For Checking Network Connection via Toast
             BatchDialog();
             Log.i(TAG, "onCreate:--New Preference " + selectedBatch);
         } else {
             if (!p.getBatch().equals("")) {
-                //get batch column object from server and display details
+//                get batch from server and display Schedule
+//                if batch Pref is saved on first startup get it and pass to loaddata method
                 loadListData(day_name);
             }
             Log.i(TAG, "onCreate:--Preference Refereed");
         }
+    }
+
+    public void FetchAndStoreData() {
+        ParseQuery<ParseObject> parseQuery = ParseQuery.getQuery("te_b");
+        parseQuery.orderByAscending("sequence");
+        parseQuery.findInBackground(new FindCallback<ParseObject>() {
+            @Override
+            public void done(List<ParseObject> ttls, ParseException e) {
+                if (e == null) {
+                    int size = ttls.size();
+                    for (int i = 0; i < size; i++) {
+                        TimeTable tb = new TimeTable();
+                        ParseObject po = ttls.get(i);
+                        if (po.has(days.get(1))) {
+                            JSONObject job = po.getJSONObject(days.get(1));
+                            tb.setMONDAY(job.toString());
+                        }
+                        if (po.has(days.get(2))) {
+                            JSONObject job = po.getJSONObject(days.get(2));
+                            tb.setTUESDAY(job.toString());
+                        }
+                        if (po.has(days.get(3))) {
+                            JSONObject job = po.getJSONObject(days.get(3));
+                            tb.setWEDNESDAY(job.toString());
+                        }
+                        if (po.has(days.get(4))) {
+                            JSONObject job = po.getJSONObject(days.get(4));
+                            tb.setTHURSDAY(job.toString());
+                        }
+                        if (po.has(days.get(5))) {
+                            JSONObject job = po.getJSONObject(days.get(5));
+                            tb.setFRIDAY(job.toString());
+                        }
+                        tb.save();
+                        Log.i(TAG, "methodlist: " + "mainlistsize " + tb.toString() + " seq. =" + po.get("sequence"));
+                    }
+
+                }
+            }
+        });
     }
 
 
@@ -120,12 +166,15 @@ public class Home extends AppCompatActivity {
                                     ParseObject oo = list.get(i + 1);
                                     try {
                                         time = o.getJSONObject(dn).getString("time").toString();
-                                        String timeo = oo.getJSONObject(dn).getString("time").toString();
+                                        String nextObjecttime = oo.getJSONObject(dn).getString("time").toString();
                                         s_type = o.getJSONObject(dn).getString("s_type");
                                         sub = o.getJSONObject(dn).getString("Sub");
                                         ro_no = o.getJSONObject(dn).getString("ro_no");
                                         techr = o.getJSONObject(dn).getString("Techer");
-                                        if (!s_type.equals("--") && !time.equals(timeo)) {
+                                        if (!s_type.equals("--") && !time.equals(nextObjecttime)) {
+//                                          Add dataModel To ListView adapter only of it's s_type is not "--"
+//                                          & current object time key value is not equal to nextObject time key value
+//          TODO: 4-  apply same logic to Offline DataModel passing from sqlite to listview adapter
                                             DataModel dm = new DataModel(time, ro_no, sub, techr, s_type);
                                             dataset.add(dm);
                                             sc.notifyDataSetChanged();
@@ -133,7 +182,7 @@ public class Home extends AppCompatActivity {
                                             HomeList.setLayoutAnimation(controller);
                                             next.setEnabled(true);
                                             prev.setEnabled(true);
-//                                            Log.i(TAG, "Data ---++: " + o.getJSONObject(dn).get("Sub"));
+//                                            Log.i(TAG, "Data ---++: " + o.getJSONObject(dn).get("Sub") + "- day position =" + o.getJSONObject(dn).toString());
                                         }
 
                                     } catch (JSONException e1) {
@@ -186,7 +235,13 @@ public class Home extends AppCompatActivity {
                         p = new Preference(Home.this);
                         p.setBatch(item);
                         p.setFirstStartup(true);
+//         TODO: 3- Call very first time loaddata() method once the Internet Connection is checked and App is Connected to Internet Then call FetchAndStoreData() method and Store DATA in SQlite
                         loadListData(day_name);
+//           Fetch Schedule data for all working days and Store it in SQLite using timetable model from active android
+//           this will run as Batch Dialog get selectedbacth and first initialization of loaddata() method
+//         TODO: 1- Add prefrece for Data fetched from server to SQLite In FetchAndStoreData() Method and apply logic for using data loading from server or sqlite
+                        FetchAndStoreData();
+
 //                        selectedBatch = item;
                         Toast.makeText(Home.this, " Selected Batch" + item, Toast.LENGTH_SHORT).show();
                     }
@@ -194,12 +249,8 @@ public class Home extends AppCompatActivity {
                 .show();
     }
 
-    @Override
-    protected void attachBaseContext(Context newBase) {
-        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
-    }
-
     public void onNextClick(View v) {
+//         TODO: 5 -  Add List Adapter Data Upating Mechanism from SQLite on Behalf of Intenet On Both next > &  < previous Arrow Button
         String nextday, cday;
         pb.setVisibility(View.VISIBLE);
         iv.setVisibility(View.GONE);
@@ -288,6 +339,11 @@ public class Home extends AppCompatActivity {
                 Log.i(TAG, "onPrevClick: From (Saturday)" + cday + " To " + prevday);
             }
         }
+    }
+
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
     }
 
 }

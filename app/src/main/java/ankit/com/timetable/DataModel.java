@@ -8,6 +8,7 @@ public class DataModel {
     private String time;
     private String ro_no;
     private String sub;
+    private String s_type;
     private String teacher;
 
     public DataModel() {
@@ -61,8 +62,5 @@ public class DataModel {
     public void setS_type(String s_type) {
         this.s_type = s_type;
     }
-
-    private String s_type;
-
 
 }

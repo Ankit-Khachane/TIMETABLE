@@ -16,7 +16,7 @@ public class Preference {
 
     public Preference(Context context) {
 
-        pref = context.getSharedPreferences("Time_Table", MODE_PRIVATE);
+        pref = context.getSharedPreferences("Pref_Time_Table", MODE_PRIVATE);
         editor = pref.edit();
     }
 
@@ -36,8 +36,18 @@ public class Preference {
         editor.commit();
     }
 
-    public boolean getFirstStarup() {
-        boolean val = pref.getBoolean("First_Startup", false);
+    public void setDataSynced(boolean a) {
+        editor.putBoolean("Data_Synced", a);
+        editor.commit();
+    }
+
+    public boolean getDataSynced() {
+        boolean val = pref.getBoolean("Data_Synced", false);
+        return val;
+    }
+
+    public boolean getFirstStarupFlag() {
+        boolean val = pref.getBoolean("Data_Synced", false);
         return val;
     }
 

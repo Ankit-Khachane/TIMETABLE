@@ -28,6 +28,5 @@ public class App extends Application {
                 .clientKey("b5RJAqZ8Cs2VoxBY7UvbJ8lWO6h7MfZy6x7tSlUq")
                 .server("https://parseapi.back4app.com/").build()
         );
-
     }
 }

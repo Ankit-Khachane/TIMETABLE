@@ -1,6 +1,8 @@
 package ankit.com.timetable;
 
 import android.content.Context;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -64,14 +66,14 @@ public class Home extends AppCompatActivity {
 
         days = Arrays.asList("SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY");
 
-        tb = (Toolbar) findViewById(R.id.tb_home);
+        tb = findViewById(R.id.tb_home);
         mTitle = tb.findViewById(R.id.title);
-        iv = (ImageView) findViewById(R.id.empty_view);
-        iv = (ImageView) findViewById(R.id.empty_view);
-        next = (ImageButton) findViewById(R.id.next);
-        prev = (ImageButton) findViewById(R.id.previous);
-        day_tv = (TextView) findViewById(R.id.dayname);
-        pb = (ProgressBar) findViewById(R.id.progressBar);
+        iv = findViewById(R.id.empty_view);
+        iv = findViewById(R.id.empty_view);
+        next = findViewById(R.id.next);
+        prev = findViewById(R.id.previous);
+        day_tv = findViewById(R.id.dayname);
+        pb = findViewById(R.id.progressBar);
         pb.setVisibility(View.VISIBLE);
 
         setSupportActionBar(tb);
@@ -83,19 +85,16 @@ public class Home extends AppCompatActivity {
         day_tv.setText(day_name);
 
         am = AnimationUtils.loadAnimation(this, R.anim.fadein);
-
         dataset = new ArrayList<DataModel>();
         sc = new ScheduleAdapter(this, dataset);
-        HomeList = (ListView) findViewById(R.id.main_list);
+        HomeList = findViewById(R.id.main_list);
         controller = AnimationUtils.loadLayoutAnimation(this, R.anim.list_row_anime);
         HomeList.setAdapter(sc);
-
         p = new Preference(this);
         //if (isNetworkConnected() && isInternetWorking())
         if (isNetworkConnected()) {
             //On Internet Connection
             isOnline = true;
-
             if (!p.getFirstStarupFlag() && p.getBatch().equals("") && !p.getDataSynced()) {
                 //if this is first launch
                 // call -> Dialog call -> 1.FetchAndSync() + 2.laodSyncedData();
@@ -109,7 +108,6 @@ public class Home extends AppCompatActivity {
                     Log.i(TAG, "Yes Internet Conenction : " + isOnline + " - is in Normal SQL Block ");
                 } else {
                     //load data from server via internet
-
                     loadServerData(day_name);
                     Log.i(TAG, "Yes Internet Conenction : " + isOnline + " - is in Normal Server Fetch Block ");
                 }
@@ -118,18 +116,14 @@ public class Home extends AppCompatActivity {
         } else {
             //No network connection
             isOnline = false;
-
             if (!p.getFirstStarupFlag() && p.getBatch().equals("") && !p.getDataSynced()) {
                 //if this is first launch
-
                 //guide user to connect to Intenet Atleast One Time
                 Log.i(TAG, "No Internet Conenction : " + isOnline + " - is in First Lunch Block ");
             } else {
                 //if this is normal launch
-
                 if (p.getDataSynced()) {
                     //load data from sqlite if data is synced.
-
                     loadSyncedData(day_name);
                     Log.i(TAG, "No Internet Conenction : " + isOnline + " - is in Normal SQL Block ");
                 } else {
@@ -137,9 +131,7 @@ public class Home extends AppCompatActivity {
                     //suggest to connect to Internet and follow
                     //checkinternet -> FetchAndLoadData() -> checksynched ->loadSynchedData()
                     // TODO: 13-12-2017 Add Dialog To DO FirstLunch Routine & check internet before that.
-
                     Log.i(TAG, "No Internet Conenction : " + isOnline + " - is in No Data Stored Block ");
-
                 }
             }
             Toast.makeText(this, "No Internet Connection !", Toast.LENGTH_SHORT).show();
@@ -182,10 +174,15 @@ public class Home extends AppCompatActivity {
                     }
 //                    set data fetched pref
                     p.setDataSynced(true);
-
                 }
             }
         });
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
     public void loadSyncedData(String cday) {
@@ -258,12 +255,9 @@ public class Home extends AppCompatActivity {
                                 Log.i(TAG, "Data - " + rowfirst.getWEDNESDAY());
                             }
                         }
-
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-
-
                 }
                 Log.i(TAG, "SQl_fetchd list Size: -" + daycol.size());
             }
@@ -292,8 +286,8 @@ public class Home extends AppCompatActivity {
                                 if (i < n - 1) {
                                     ParseObject oo = list.get(i + 1);
                                     try {
-                                        time = o.getJSONObject(cday).getString("time").toString();
-                                        String nextObjecttime = oo.getJSONObject(cday).getString("time").toString();
+                                        time = o.getJSONObject(cday).getString("time");
+                                        String nextObjecttime = oo.getJSONObject(cday).getString("time");
                                         s_type = o.getJSONObject(cday).getString("s_type");
                                         sub = o.getJSONObject(cday).getString("Sub");
                                         ro_no = o.getJSONObject(cday).getString("ro_no");
@@ -310,15 +304,11 @@ public class Home extends AppCompatActivity {
                                             prev.setEnabled(true);
 //                                            Log.i(TAG, "Data ---++: " + o.getJSONObject(cday).get("Sub") + "- day position =" + o.getJSONObject(cday).toString());
                                         }
-
                                     } catch (JSONException e1) {
                                         e1.printStackTrace();
                                     }
                                 }
-
-
                             }
-
                         } else {
                             //data fetch failed
                         }
@@ -332,7 +322,7 @@ public class Home extends AppCompatActivity {
     }
 
     private void BatchDialog() {
-        String list[] = {"COMP-B1", "COMP-B2", "COMP-B3", "COMP-B4"};
+        String[] list = {"COMP-B1", "COMP-B2", "COMP-B3", "COMP-B4"};
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.dialog_row, R.id.dialog_list_row, list);
         new LovelyChoiceDialog(this)
                 .setTopColorRes(R.color.colorAccent)

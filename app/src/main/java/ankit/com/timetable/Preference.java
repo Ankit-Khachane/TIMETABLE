@@ -1,5 +1,6 @@
 package ankit.com.timetable;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
@@ -9,12 +10,13 @@ import static android.content.Context.MODE_PRIVATE;
  * Created by khach on 16-07-2017.
  */
 
-public class Preference {
+class Preference {
     Context s_context;
-    protected SharedPreferences.Editor editor;
-    protected SharedPreferences pref;
+    private final SharedPreferences.Editor editor;
+    private final SharedPreferences pref;
 
-    public Preference(Context context) {
+    @SuppressLint("CommitPrefEdits")
+    Preference(Context context) {
 
         pref = context.getSharedPreferences("Pref_Time_Table", MODE_PRIVATE);
         editor = pref.edit();
@@ -26,33 +28,30 @@ public class Preference {
         editor.commit();
     }
 
-    public void setFirstStartup(boolean val) {
+    void setFirstStartup(boolean val) {
         editor.putBoolean("First_Startup", val);
         editor.commit();
     }
 
-    public void setBatch(String batch) {
-        editor.putString("Batch", batch);
-        editor.commit();
+    boolean getDataSynced() {
+        return pref.getBoolean("Data_Synced", false);
     }
 
-    public void setDataSynced(boolean a) {
+    void setDataSynced(boolean a) {
         editor.putBoolean("Data_Synced", a);
         editor.commit();
     }
 
-    public boolean getDataSynced() {
-        boolean val = pref.getBoolean("Data_Synced", false);
-        return val;
+    boolean getFirstStartFlag() {
+        return !pref.getBoolean("Data_Synced", false);
     }
 
-    public boolean getFirstStarupFlag() {
-        boolean val = pref.getBoolean("Data_Synced", false);
-        return val;
+    String getBatch() {
+        return pref.getString("Batch", "");
     }
 
-    public String getBatch() {
-        String s = pref.getString("Batch", "");
-        return s;
+    void setBatch(String batch) {
+        editor.putString("Batch", batch);
+        editor.commit();
     }
 }

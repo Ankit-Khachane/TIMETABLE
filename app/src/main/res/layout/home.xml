@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?><!--suppress ALL -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/home"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/activityback"
+    android:background="@drawable/round_corner_background"
     tools:context="ankit.com.timetable.Home">
 
     <android.support.v7.widget.Toolbar
@@ -24,13 +24,14 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:overScrollMode="never"
-            android:paddingLeft="48dp"
-            android:text="Time Table"
+            android:paddingStart="48dp"
+            android:text="@string/time_table_title"
             android:textAlignment="center"
             android:textAllCaps="true"
             android:textColor="@color/bluebird"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            tools:ignore="RtlSymmetry" />
     </android.support.v7.widget.Toolbar>
 
     <LinearLayout
@@ -42,11 +43,12 @@
         android:orientation="horizontal">
 
         <ImageButton
+            android:layout_marginStart="10dp"
             android:id="@+id/previous"
             fontPath="fonts/Montserrat-Medium.otf"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
+            android:contentDescription="@string/previous_button"
             android:background="@drawable/button"
             android:onClick="onPrevClick"
             android:padding="5dp"
@@ -62,7 +64,7 @@
             android:layout_weight="1"
             android:padding="5dp"
             android:singleLine="true"
-            android:text="DAY NAME"
+            android:text="@string/day_name_placeholder"
             android:textAlignment="center"
             android:textColor="@color/bluebird"
             android:textSize="18sp"
@@ -70,10 +72,11 @@
 
         <ImageButton
             android:id="@+id/next"
+            android:layout_marginEnd="10dp"
             fontPath="fonts/Montserrat-Medium.otf"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
+            android:contentDescription="@string/next_button"
             android:background="@drawable/button"
             android:onClick="onNextClick"
             android:padding="5dp"
@@ -95,10 +98,12 @@
         android:overScrollMode="never"
         android:scrollIndicators="none"
         android:scrollbars="none"
-        tools:listitem="@layout/home_list_row" />
+        tools:listitem="@layout/home_list_row"
+        tools:targetApi="m" />
 
     <ImageView
         android:id="@+id/empty_view"
+        android:contentDescription="@string/default_placeholder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/main_list"

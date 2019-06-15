@@ -18,14 +18,13 @@ import java.util.List;
  * Created by khach on 16-07-2017.
  */
 
-public class ScheduleAdapter extends BaseAdapter {
-    Context c;
-    List<DataModel> modelset;
-    GradientDrawable bgShape;
-    String TAG = "Adapter", time, sub, rono, teacher, stype;
+class ScheduleAdapter extends BaseAdapter {
+    private final Context c;
+    private final List<DataModel> modelset;
+    String TAG = "Adapter";
 
 
-    public ScheduleAdapter(Context context, List<DataModel> o) {
+    ScheduleAdapter(Context context, List<DataModel> o) {
         this.c = context;
         this.modelset = o;
     }
@@ -41,31 +40,32 @@ public class ScheduleAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder h = null;
         LayoutInflater mInflater = (LayoutInflater) c.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
-        if (convertView == null) {
-            convertView = mInflater.inflate(R.layout.home_list_row, null);
+        if (convertView == null && mInflater != null) {
+            convertView = mInflater.inflate(R.layout.home_list_row, parent, false);
             h = new ViewHolder();
-            h.bar = (LinearLayout) convertView.findViewById(R.id.bar);
-            h.time_tv = (TextView) convertView.findViewById(R.id.time_tv);
-            h.sub_tv = (TextView) convertView.findViewById(R.id.Sub_tv);
-            h.detail_tv = (TextView) convertView.findViewById(R.id.detail_tv);
+            h.bar = convertView.findViewById(R.id.bar);
+            h.time_tv = convertView.findViewById(R.id.time_tv);
+            h.sub_tv = convertView.findViewById(R.id.Sub_tv);
+            h.detail_tv = convertView.findViewById(R.id.detail_tv);
             convertView.setTag(h);
         } else {
-            h = (ViewHolder) convertView.getTag();
+            if (convertView != null)
+                h = (ViewHolder) convertView.getTag();
         }
         DataModel sc = (DataModel) getItem(position);
         if (sc != null) {
 
-            time = sc.getTime();
-            sub = sc.getSub();
-            rono = sc.getRo_no();
-            teacher = sc.getTeacher();
-            stype = sc.getS_type();
+            String time = sc.getTime();
+            String sub = sc.getSub();
+            String rono = sc.getRo_no();
+            String teacher = sc.getTeacher();
+            String stype = sc.getS_type();
 
             h.time_tv.setText(time);
             h.sub_tv.setText(sub);
-            h.detail_tv.setText("PROF : " + teacher + " | Room No : " + rono);
+            h.detail_tv.setText(String.format("PROF : %s | Room No : %s", teacher, rono));
 
-            bgShape = (GradientDrawable) h.bar.getBackground();
+            GradientDrawable bgShape = (GradientDrawable) h.bar.getBackground();
             if (sc.getS_type().equals("Break")) {
                 bgShape.setColor(Color.parseColor("#4CAF50"));
             }

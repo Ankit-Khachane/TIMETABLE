@@ -31,13 +31,13 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     implementation 'com.android.support:appcompat-v7:28.0.0'
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
     testImplementation 'junit:junit:4.12'
-    implementation 'com.parse:parse-android:1.15.8'
+    implementation 'com.github.parse-community.Parse-SDK-Android:parse:1.18.5'
     implementation 'uk.co.chrisjenx:calligraphy:2.3.0'
     implementation 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
     implementation 'com.yarolegovich:lovely-dialog:1.1.0'

@@ -36,28 +36,34 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import ankit.com.timetable.orm.TimeTable;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 public class Home extends AppCompatActivity {
 
+
     String selectedBatch;
-    boolean isOnline;
-    Preference p;
-    private String TAG = "Home";
-    ListView HomeList;
-    Toolbar tb;
-    TextView mTitle, day_tv;
-    ScheduleAdapter sc;
-    ImageView iv;
-    ProgressBar pb;
-    ImageButton next, prev;
-    Animation am;
-    LayoutAnimationController controller;
-    String time, techr, sub, s_type, ro_no, day_name;
-    List<DataModel> dataset;
-    List<String> days;
+    private final String TAG = "Home";
+    private boolean isOnline;
+    private Preference p;
+    private ListView HomeList;
+    private TextView day_tv;
+    private ScheduleAdapter sc;
+    private ImageView iv;
+    private ProgressBar pb;
+    private ImageButton next;
+    private ImageButton prev;
+    private LayoutAnimationController controller;
+    private String time;
+    private String techr;
+    private String sub;
+    private String s_type;
+    private String ro_no;
+    private String day_name;
+    private List<DataModel> dataset;
+    private List<String> days;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,8 +72,8 @@ public class Home extends AppCompatActivity {
 
         days = Arrays.asList("SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY");
 
-        tb = findViewById(R.id.tb_home);
-        mTitle = tb.findViewById(R.id.title);
+        Toolbar tb = findViewById(R.id.tb_home);
+        TextView mTitle = tb.findViewById(R.id.title);
         iv = findViewById(R.id.empty_view);
         iv = findViewById(R.id.empty_view);
         next = findViewById(R.id.next);
@@ -77,15 +83,16 @@ public class Home extends AppCompatActivity {
         pb.setVisibility(View.VISIBLE);
 
         setSupportActionBar(tb);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
+        if (getSupportActionBar() != null)
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         Date date = new Date();
-        SimpleDateFormat f = new SimpleDateFormat("EEEE");
+        SimpleDateFormat f = new SimpleDateFormat("EEEE", Locale.US);
         day_name = f.format(date).toUpperCase();
         day_tv.setText(day_name);
 
-        am = AnimationUtils.loadAnimation(this, R.anim.fadein);
-        dataset = new ArrayList<DataModel>();
+        Animation am = AnimationUtils.loadAnimation(this, R.anim.fadein);
+        dataset = new ArrayList<>();
         sc = new ScheduleAdapter(this, dataset);
         HomeList = findViewById(R.id.main_list);
         controller = AnimationUtils.loadLayoutAnimation(this, R.anim.list_row_anime);
@@ -95,7 +102,7 @@ public class Home extends AppCompatActivity {
         if (isNetworkConnected()) {
             //On Internet Connection
             isOnline = true;
-            if (!p.getFirstStarupFlag() && p.getBatch().equals("") && !p.getDataSynced()) {
+            if (p.getFirstStartFlag() && p.getBatch().equals("") && !p.getDataSynced()) {
                 //if this is first launch
                 // call -> Dialog call -> 1.FetchAndSync() + 2.laodSyncedData();
                 BatchDialog();
@@ -116,7 +123,7 @@ public class Home extends AppCompatActivity {
         } else {
             //No network connection
             isOnline = false;
-            if (!p.getFirstStarupFlag() && p.getBatch().equals("") && !p.getDataSynced()) {
+            if (p.getFirstStartFlag() && p.getBatch().equals("") && !p.getDataSynced()) {
                 //if this is first launch
                 //guide user to connect to Intenet Atleast One Time
                 Log.i(TAG, "No Internet Conenction : " + isOnline + " - is in First Lunch Block ");
@@ -138,7 +145,7 @@ public class Home extends AppCompatActivity {
         }
     }
 
-    public void FetchAndStoreData() {
+    private void FetchAndStoreData() {
         ParseQuery<ParseObject> parseQuery = ParseQuery.getQuery("te_b");
         parseQuery.orderByAscending("sequence");
         parseQuery.findInBackground(new FindCallback<ParseObject>() {
@@ -151,26 +158,31 @@ public class Home extends AppCompatActivity {
                         ParseObject po = ttls.get(i);
                         if (po.has(days.get(1))) {
                             JSONObject job = po.getJSONObject(days.get(1));
-                            tb.setMONDAY(job.toString());
+                            if (job != null)
+                                tb.setMONDAY(job.toString());
                         }
                         if (po.has(days.get(2))) {
                             JSONObject job = po.getJSONObject(days.get(2));
-                            tb.setTUESDAY(job.toString());
+                            if (job != null)
+                                tb.setTUESDAY(job.toString());
                         }
                         if (po.has(days.get(3))) {
                             JSONObject job = po.getJSONObject(days.get(3));
-                            tb.setWEDNESDAY(job.toString());
+                            if (job != null)
+                                tb.setWEDNESDAY(job.toString());
                         }
                         if (po.has(days.get(4))) {
                             JSONObject job = po.getJSONObject(days.get(4));
-                            tb.setTHURSDAY(job.toString());
+                            if (job != null)
+                                tb.setTHURSDAY(job.toString());
                         }
                         if (po.has(days.get(5))) {
                             JSONObject job = po.getJSONObject(days.get(5));
-                            tb.setFRIDAY(job.toString());
+                            if (job != null)
+                                tb.setFRIDAY(job.toString());
                         }
                         tb.save();
-                        Log.i(TAG, "methodlist: " + "mainlistsize " + tb.toString() + " seq. =" + po.get("sequence"));
+                        Log.i(TAG, "method list: " + "main list size " + tb.toString() + " seq. =" + po.get("sequence"));
                     }
 //                    set data fetched pref
                     p.setDataSynced(true);
@@ -185,7 +197,7 @@ public class Home extends AppCompatActivity {
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
-    public void loadSyncedData(String cday) {
+    private void loadSyncedData(String cday) {
         if (cday.equals("MONDAY") || cday.equals("TUESDAY") || cday.equals("WEDNESDAY") || cday.equals("THURSDAY") || cday.equals("FRIDAY")) {
             dataset.clear();
             String time, ftime, ro_no, Sub, Techer, s_type;
@@ -218,7 +230,7 @@ public class Home extends AppCompatActivity {
                         JSONObject firstjo = new JSONObject(time1);
                         if (i < size - 1) {
                             TimeTable rowsecond = daycol.get(i + 1);
-                            String time2 = "";
+                            String time2;
                             time2 = rowsecond.getWEDNESDAY();
                             switch (cday) {
                                 case "MONDAY":
@@ -286,23 +298,27 @@ public class Home extends AppCompatActivity {
                                 if (i < n - 1) {
                                     ParseObject oo = list.get(i + 1);
                                     try {
-                                        time = o.getJSONObject(cday).getString("time");
-                                        String nextObjecttime = oo.getJSONObject(cday).getString("time");
-                                        s_type = o.getJSONObject(cday).getString("s_type");
-                                        sub = o.getJSONObject(cday).getString("Sub");
-                                        ro_no = o.getJSONObject(cday).getString("ro_no");
-                                        techr = o.getJSONObject(cday).getString("Techer");
-                                        if (!s_type.equals("--") && !time.equals(nextObjecttime)) {
+                                        if (o != null) {
+                                            time = o.getJSONObject(cday).getString("time");
+                                            String nextObjectTime = oo.getJSONObject(cday).getString("time");
+                                            s_type = o.getJSONObject(cday).getString("s_type");
+                                            sub = o.getJSONObject(cday).getString("Sub");
+                                            ro_no = o.getJSONObject(cday).getString("ro_no");
+                                            techr = o.getJSONObject(cday).getString("Techer");
+                                            if (!s_type.equals("--") && !time.equals(nextObjectTime)) {
 //                                          Add dataModel To ListView adapter only of it's s_type is not "--"
 //                                          & current object time key value is not equal to nextObject time key value
-                                            DataModel dm = new DataModel(time, ro_no, sub, techr, s_type);
-                                            dataset.add(dm);
-                                            sc.notifyDataSetChanged();
-                                            pb.setVisibility(View.GONE);
-                                            HomeList.setLayoutAnimation(controller);
-                                            next.setEnabled(true);
-                                            prev.setEnabled(true);
+                                                DataModel dm = new DataModel(time, ro_no, sub, techr, s_type);
+                                                dataset.add(dm);
+                                                sc.notifyDataSetChanged();
+                                                pb.setVisibility(View.GONE);
+                                                HomeList.setLayoutAnimation(controller);
+                                                next.setEnabled(true);
+                                                prev.setEnabled(true);
 //                                            Log.i(TAG, "Data ---++: " + o.getJSONObject(cday).get("Sub") + "- day position =" + o.getJSONObject(cday).toString());
+                                            }
+                                        } else {
+                                            Log.d(TAG, "done: Object o = null !");
                                         }
                                     } catch (JSONException e1) {
                                         e1.printStackTrace();
@@ -311,6 +327,7 @@ public class Home extends AppCompatActivity {
                             }
                         } else {
                             //data fetch failed
+                            Log.d(TAG, "done: Data Fetched Failed !");
                         }
                     }
                 });
@@ -323,7 +340,7 @@ public class Home extends AppCompatActivity {
 
     private void BatchDialog() {
         String[] list = {"COMP-B1", "COMP-B2", "COMP-B3", "COMP-B4"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, R.layout.dialog_row, R.id.dialog_list_row, list);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.dialog_row, R.id.dialog_list_row, list);
         new LovelyChoiceDialog(this)
                 .setTopColorRes(R.color.colorAccent)
                 .setTitle("Select Your Batch")
@@ -454,27 +471,29 @@ public class Home extends AppCompatActivity {
         }
     }
 
-    public final boolean isNetworkConnected() {
+    private boolean isNetworkConnected() {
 
         // get Connectivity Manager object to check connection
-        ConnectivityManager connec = (ConnectivityManager) getSystemService(getBaseContext().CONNECTIVITY_SERVICE);
+        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
 
         // Check for network connections
-        if (connec.getNetworkInfo(0).getState() == android.net.NetworkInfo.State.CONNECTED ||
-                connec.getNetworkInfo(0).getState() == android.net.NetworkInfo.State.CONNECTING ||
-                connec.getNetworkInfo(1).getState() == android.net.NetworkInfo.State.CONNECTING ||
-                connec.getNetworkInfo(1).getState() == android.net.NetworkInfo.State.CONNECTED) {
+        if (connectivityManager != null) {
+            if (connectivityManager.getNetworkInfo(0).getState() == android.net.NetworkInfo.State.CONNECTED ||
+                    connectivityManager.getNetworkInfo(0).getState() == android.net.NetworkInfo.State.CONNECTING ||
+                    connectivityManager.getNetworkInfo(1).getState() == android.net.NetworkInfo.State.CONNECTING ||
+                    connectivityManager.getNetworkInfo(1).getState() == android.net.NetworkInfo.State.CONNECTED) {
 
-            // if connected with internet
+                // if connected with internet
 
-            Toast.makeText(this, " Connected ", Toast.LENGTH_LONG).show();
-            return true;
+                Toast.makeText(this, " Connected ", Toast.LENGTH_LONG).show();
+                return true;
 
-        } else if (connec.getNetworkInfo(0).getState() == android.net.NetworkInfo.State.DISCONNECTED ||
-                connec.getNetworkInfo(1).getState() == android.net.NetworkInfo.State.DISCONNECTED) {
+            } else if (connectivityManager.getNetworkInfo(0).getState() == android.net.NetworkInfo.State.DISCONNECTED ||
+                    connectivityManager.getNetworkInfo(1).getState() == android.net.NetworkInfo.State.DISCONNECTED) {
 
-            Toast.makeText(this, " Not Connected ", Toast.LENGTH_LONG).show();
-            return false;
+                Toast.makeText(this, " Not Connected ", Toast.LENGTH_LONG).show();
+                return false;
+            }
         }
         return false;
     }
@@ -487,9 +506,8 @@ public class Home extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.sett:
-                Toast.makeText(this, "It's Setting", Toast.LENGTH_SHORT).show();
+        if (item.getItemId() == R.id.sett) {
+            Toast.makeText(this, "It's Setting", Toast.LENGTH_SHORT).show();
         }
         return super.onOptionsItemSelected(item);
     }

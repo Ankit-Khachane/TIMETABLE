@@ -6,6 +6,6 @@
         android:id="@+id/sett"
         android:enabled="true"
         android:icon="@drawable/setting"
-        android:title="Setting"
+        android:title="@string/setting_menu_item_lable"
         app:showAsAction="always"/>
 </menu>

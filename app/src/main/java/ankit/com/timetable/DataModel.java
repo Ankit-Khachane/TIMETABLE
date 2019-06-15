@@ -4,7 +4,7 @@ package ankit.com.timetable;
  * Created by khach on 18-07-2017.
  */
 
-public class DataModel {
+class DataModel {
     private String time;
     private String ro_no;
     private String sub;
@@ -14,7 +14,7 @@ public class DataModel {
     public DataModel() {
     }
 
-    public DataModel(String time, String ro_no, String sub, String teacher, String s_type) {
+    DataModel(String time, String ro_no, String sub, String teacher, String s_type) {
         this.time = time;
         this.ro_no = ro_no;
         this.sub = sub;
@@ -22,7 +22,7 @@ public class DataModel {
         this.s_type = s_type;
     }
 
-    public String getTime() {
+    String getTime() {
 
         return time;
     }
@@ -31,7 +31,7 @@ public class DataModel {
         this.time = time;
     }
 
-    public String getRo_no() {
+    String getRo_no() {
         return ro_no;
     }
 
@@ -39,7 +39,7 @@ public class DataModel {
         this.ro_no = ro_no;
     }
 
-    public String getSub() {
+    String getSub() {
         return sub;
     }
 
@@ -47,7 +47,7 @@ public class DataModel {
         this.sub = sub;
     }
 
-    public String getTeacher() {
+    String getTeacher() {
         return teacher;
     }
 
@@ -55,7 +55,7 @@ public class DataModel {
         this.teacher = teacher;
     }
 
-    public String getS_type() {
+    String getS_type() {
         return s_type;
     }
 

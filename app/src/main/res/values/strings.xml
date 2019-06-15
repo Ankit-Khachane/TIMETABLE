@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">Time Table</string>
     <string name="setting_pink">setting icon</string>
+    <string name="previous_button">previous button</string>
+    <string name="next_button">next button</string>
+    <string name="default_placeholder">default placeholder</string>
+    <string name="time_table_title">Time Table</string>
+    <string name="day_name_placeholder">DAY NAME</string>
+    <string name="time_range_placeholder">9:00 – 10:00 PM</string>
+    <string name="setting_menu_item_lable">Setting</string>
+    <string name="prof_placeholder">PROF : RNM | Room No :</string>
+    <string name="sub_placeholder">MICROPROCESSOR</string>
 </resources>

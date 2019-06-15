@@ -15,17 +15,17 @@ import java.util.List;
 @Table(name = "ankittb")
 public class TimeTable extends Model {
     @Column(name = "seq")
-    public int SEQ;
+    private int SEQ;
     @Column(name = "monday")
-    public String MONDAY;
+    private String MONDAY;
     @Column(name = "tuesday")
-    public String TUESDAY;
+    private String TUESDAY;
     @Column(name = "wednesday")
-    public String WEDNESDAY;
+    private String WEDNESDAY;
     @Column(name = "thursday")
-    public String THURSDAY;
+    private String THURSDAY;
     @Column(name = "friday")
-    public String FRIDAY;
+    private String FRIDAY;
 
     public TimeTable() {
         super();
@@ -85,8 +85,8 @@ public class TimeTable extends Model {
 
     public void setFRIDAY(String FRIDAY) {
         if (!FRIDAY.equals("")) {
+            this.FRIDAY = FRIDAY;
         }
-        this.FRIDAY = FRIDAY;
     }
 
     public List<TimeTable> getDaySchedule(String day_selected) {

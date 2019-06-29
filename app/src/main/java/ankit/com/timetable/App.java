@@ -1,6 +1,8 @@
 package ankit.com.timetable;
 
 
+import android.os.StrictMode;
+
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Configuration;
 import com.activeandroid.app.Application;
@@ -16,6 +18,20 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        if (BuildConfig.DEBUG) {
+            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+                    .detectNetwork()
+                    .detectDiskReads()
+                    .detectDiskWrites()
+                    .penaltyDialog()
+                    .penaltyLog()
+                    .build());
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                    .detectActivityLeaks()
+                    .detectLeakedClosableObjects()
+                    .penaltyLog()
+                    .build());
+        }
         Configuration dbconf = new Configuration.Builder(this).setDatabaseName("table.db").create();
         ActiveAndroid.initialize(dbconf, true);
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()

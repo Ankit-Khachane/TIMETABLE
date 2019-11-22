@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
 import android.widget.ArrayAdapter;
@@ -41,10 +40,9 @@ import java.util.Locale;
 import ankit.com.timetable.orm.TimeTable;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
+@SuppressWarnings("ALL")
 public class Home extends AppCompatActivity {
 
-
-    String selectedBatch;
     private final String TAG = "Home";
     private boolean isOnline;
     private Preference p;
@@ -73,7 +71,6 @@ public class Home extends AppCompatActivity {
         days = Arrays.asList("SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY");
 
         Toolbar tb = findViewById(R.id.tb_home);
-        TextView mTitle = tb.findViewById(R.id.title);
         iv = findViewById(R.id.empty_view);
         iv = findViewById(R.id.empty_view);
         next = findViewById(R.id.next);
@@ -91,7 +88,6 @@ public class Home extends AppCompatActivity {
         day_name = f.format(date).toUpperCase();
         day_tv.setText(day_name);
 
-        Animation am = AnimationUtils.loadAnimation(this, R.anim.fadein);
         dataset = new ArrayList<>();
         sc = new ScheduleAdapter(this, dataset);
         HomeList = findViewById(R.id.main_list);

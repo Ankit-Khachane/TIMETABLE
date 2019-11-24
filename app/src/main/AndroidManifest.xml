@@ -22,7 +22,7 @@
             android:value="1" />
 
         <activity
-            android:name=".Home"
+            android:name=".view.Home"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

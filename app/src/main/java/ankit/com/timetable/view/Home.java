@@ -1,4 +1,4 @@
-package ankit.com.timetable;
+package ankit.com.timetable.view;
 
 import android.content.Context;
 import android.content.pm.ActivityInfo;
@@ -37,18 +37,23 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import ankit.com.timetable.orm.TimeTable;
+import ankit.com.timetable.R;
+import ankit.com.timetable.model.DataModel;
+import ankit.com.timetable.model.Preference;
+import ankit.com.timetable.model.TimeTable;
+import ankit.com.timetable.presenter.ScheduleListAdapter;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
 @SuppressWarnings("ALL")
 public class Home extends AppCompatActivity {
+    // TODO: 24-11-2019 Refractor Project to Android MVP Pattern.
 
     private final String TAG = "Home";
     private boolean isOnline;
     private Preference p;
     private ListView HomeList;
     private TextView day_tv;
-    private ScheduleAdapter sc;
+    private ScheduleListAdapter sc;
     private ImageView iv;
     private ProgressBar pb;
     private ImageButton next;
@@ -89,7 +94,7 @@ public class Home extends AppCompatActivity {
         day_tv.setText(day_name);
 
         dataset = new ArrayList<>();
-        sc = new ScheduleAdapter(this, dataset);
+        sc = new ScheduleListAdapter(this, dataset);
         HomeList = findViewById(R.id.main_list);
         controller = AnimationUtils.loadLayoutAnimation(this, R.anim.list_row_anime);
         HomeList.setAdapter(sc);
@@ -133,7 +138,6 @@ public class Home extends AppCompatActivity {
                     //tell no data is fetched
                     //suggest to connect to Internet and follow
                     //checkinternet -> FetchAndLoadData() -> checksynched ->loadSynchedData()
-                    // TODO: 13-12-2017 Add Dialog To DO FirstLunch Routine & check internet before that.
                     Log.i(TAG, "No Internet Conenction : " + isOnline + " - is in No Data Stored Block ");
                 }
             }

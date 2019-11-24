@@ -1,4 +1,4 @@
-package ankit.com.timetable.orm;
+package ankit.com.timetable.model;
 
 import android.util.Log;
 
@@ -93,23 +93,23 @@ public class TimeTable extends Model {
         List<TimeTable> col = null;
         String raw;
         if (day_selected.equals("MONDAY")) {
-            col = new Select(new String[]{"Id,monday"}).from(TimeTable.class).orderBy("Id ASC").execute();
+            col = new Select("Id,monday").from(TimeTable.class).orderBy("Id ASC").execute();
             Log.i("TimeTable", "getDaySchedule: column Monday");
         }
         if (day_selected.equals("TUESDAY")) {
-            col = new Select(new String[]{"Id,tuesday"}).from(TimeTable.class).orderBy("Id ASC").execute();
+            col = new Select("Id,tuesday").from(TimeTable.class).orderBy("Id ASC").execute();
             Log.i("TimeTable", "getDaySchedule: column Tuesday");
         }
         if (day_selected.equals("WEDNESDAY")) {
-            col = new Select(new String[]{"Id,wednesday"}).from(TimeTable.class).orderBy("Id ASC").execute();
+            col = new Select("Id,wednesday").from(TimeTable.class).orderBy("Id ASC").execute();
             Log.i("TimeTable", "getDaySchedule: column Wednesday");
         }
         if (day_selected.equals("THURSDAY")) {
-            col = new Select(new String[]{"Id,thursday"}).from(TimeTable.class).orderBy("Id ASC").execute();
+            col = new Select("Id,thursday").from(TimeTable.class).orderBy("Id ASC").execute();
             Log.i("TimeTable", "getDaySchedule: column Thursday");
         }
         if (day_selected.equals("FRIDAY")) {
-            col = new Select(new String[]{"Id,friday"}).from(TimeTable.class).orderBy("Id ASC").execute();
+            col = new Select("Id,friday").from(TimeTable.class).orderBy("Id ASC").execute();
             Log.i("TimeTable", "getDaySchedule: column Friday");
         }
         return col;

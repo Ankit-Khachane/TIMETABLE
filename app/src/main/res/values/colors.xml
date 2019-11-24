@@ -11,4 +11,7 @@
     <color name="bluebird_light" tools:keep="@color/bluebird_light">#00ecff</color>
     <color name="bluebird_violet" tools:keep="@color/bluebird_violet">#C900FF</color>
     <color name="bluebird_pink">#ff0074</color>
+    <color name="sidebar_lecture">#ff0074</color>
+    <color name="sidebar_break">#4CAF50</color>
+    <color name="sidebar_practical">#C900FF</color>
 </resources>

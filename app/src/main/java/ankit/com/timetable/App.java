@@ -23,7 +23,6 @@ public class App extends Application {
                     .detectNetwork()
                     .detectDiskReads()
                     .detectDiskWrites()
-                    .penaltyDialog()
                     .penaltyLog()
                     .build());
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
@@ -32,8 +31,8 @@ public class App extends Application {
                     .penaltyLog()
                     .build());
         }
-        Configuration dbconf = new Configuration.Builder(this).setDatabaseName("table.db").create();
-        ActiveAndroid.initialize(dbconf, true);
+        Configuration configuration = new Configuration.Builder(this).setDatabaseName("table.db").create();
+        ActiveAndroid.initialize(configuration, true);
         CalligraphyConfig.initDefault(new CalligraphyConfig.Builder()
                 .setDefaultFontPath("fonts/Montserrat-Medium.otf")
                 .setFontAttrId(R.attr.fontPath)

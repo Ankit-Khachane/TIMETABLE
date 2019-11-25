@@ -4,17 +4,17 @@ package ankit.com.timetable.model;
  * Created by khach on 18-07-2017.
  */
 
-public class DataModel {
+public class ScheduleData {
     private String time;
     private String roomNumber;
     private String subject;
     private String type;
     private String professor;
 
-    public DataModel() {
+    public ScheduleData() {
     }
 
-    public DataModel(String time, String roomNumber, String subject, String professor, String type) {
+    public ScheduleData(String time, String roomNumber, String subject, String professor, String type) {
         this.time = time;
         this.roomNumber = roomNumber;
         this.subject = subject;

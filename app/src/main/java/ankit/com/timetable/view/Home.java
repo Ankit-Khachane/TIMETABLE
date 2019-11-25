@@ -38,9 +38,10 @@ import java.util.List;
 import java.util.Locale;
 
 import ankit.com.timetable.R;
-import ankit.com.timetable.model.DataModel;
-import ankit.com.timetable.model.Preference;
-import ankit.com.timetable.model.TimeTable;
+import ankit.com.timetable.model.ApiHelper;
+import ankit.com.timetable.model.DatabaseService;
+import ankit.com.timetable.model.PreferenceService;
+import ankit.com.timetable.model.ScheduleData;
 import ankit.com.timetable.presenter.ScheduleListAdapter;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
@@ -48,75 +49,67 @@ import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 public class Home extends AppCompatActivity {
     // TODO: 24-11-2019 Refractor Project to Android MVP Pattern.
 
-    private final String TAG = "Home";
+    private static final List<String> days = Arrays.asList("SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY");
     private boolean isOnline;
-    private Preference p;
-    private ListView HomeList;
+    private final String TAG = getClass().getSimpleName();
+    private PreferenceService preferenceService;
     private TextView day_tv;
     private ScheduleListAdapter sc;
-    private ImageView iv;
-    private ProgressBar pb;
-    private ImageButton next;
-    private ImageButton prev;
+    private ListView ScheduleListView;
+    private ImageView empty_iv;
+    private ProgressBar progressBar;
     private LayoutAnimationController controller;
-    private String time;
-    private String techr;
-    private String sub;
-    private String s_type;
-    private String ro_no;
-    private String day_name;
-    private List<DataModel> dataset;
-    private List<String> days;
+    private ImageButton next_ibtn, previous_ibtn;
+    private String time, techr, sub, s_type, ro_no, day_name;
+    private List<ScheduleData> dataset;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.home);
 
-        days = Arrays.asList("SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY");
 
-        Toolbar tb = findViewById(R.id.tb_home);
-        iv = findViewById(R.id.empty_view);
-        iv = findViewById(R.id.empty_view);
-        next = findViewById(R.id.next);
-        prev = findViewById(R.id.previous);
+        Toolbar toolbar = findViewById(R.id.tb_home);
+        empty_iv = findViewById(R.id.empty_view);
+        next_ibtn = findViewById(R.id.next);
+        previous_ibtn = findViewById(R.id.previous);
         day_tv = findViewById(R.id.dayname);
-        pb = findViewById(R.id.progressBar);
-        pb.setVisibility(View.VISIBLE);
+        progressBar = findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
 
-        setSupportActionBar(tb);
+        setSupportActionBar(toolbar);
         if (getSupportActionBar() != null)
             getSupportActionBar().setDisplayShowTitleEnabled(false);
 
         Date date = new Date();
-        SimpleDateFormat f = new SimpleDateFormat("EEEE", Locale.US);
-        day_name = f.format(date).toUpperCase();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE", Locale.US);
+        day_name = dateFormat.format(date).toUpperCase();
         day_tv.setText(day_name);
 
         dataset = new ArrayList<>();
         sc = new ScheduleListAdapter(this, dataset);
-        HomeList = findViewById(R.id.main_list);
+        ScheduleListView = findViewById(R.id.main_list);
         controller = AnimationUtils.loadLayoutAnimation(this, R.anim.list_row_anime);
-        HomeList.setAdapter(sc);
-        p = new Preference(this);
+        ScheduleListView.setAdapter(sc);
+        preferenceService = new PreferenceService(this);
         //if (isNetworkConnected() && isInternetWorking())
         if (isNetworkConnected()) {
             //On Internet Connection
             isOnline = true;
-            if (p.getFirstStartFlag() && p.getBatch().equals("") && !p.getDataSynced()) {
+            if (preferenceService.getFirstStartFlag() && preferenceService.getBatch().equals("") && !preferenceService.getDataSynced()) {
                 //if this is first launch
                 // call -> Dialog call -> 1.FetchAndSync() + 2.laodSyncedData();
                 BatchDialog();
                 Log.i(TAG, "Yes Internet Conenction : " + isOnline + " - is in First Lunch Block ");
             } else {
                 //this is not first launch
-                if (p.getDataSynced()) {
+                if (preferenceService.getDataSynced()) {
                     //if this is normal launch then fetch data w.r.t pref> datasynced and laodSyncedData().
-                    loadSyncedData(day_name);
+                    loadFromSyncedData(day_name);
                     Log.i(TAG, "Yes Internet Conenction : " + isOnline + " - is in Normal SQL Block ");
                 } else {
                     //load data from server via internet
-                    loadServerData(day_name);
+                    loadFromServerData(day_name);
                     Log.i(TAG, "Yes Internet Conenction : " + isOnline + " - is in Normal Server Fetch Block ");
                 }
             }
@@ -124,15 +117,15 @@ public class Home extends AppCompatActivity {
         } else {
             //No network connection
             isOnline = false;
-            if (p.getFirstStartFlag() && p.getBatch().equals("") && !p.getDataSynced()) {
+            if (preferenceService.getFirstStartFlag() && preferenceService.getBatch().equals("") && !preferenceService.getDataSynced()) {
                 //if this is first launch
                 //guide user to connect to Intenet Atleast One Time
                 Log.i(TAG, "No Internet Conenction : " + isOnline + " - is in First Lunch Block ");
             } else {
                 //if this is normal launch
-                if (p.getDataSynced()) {
+                if (preferenceService.getDataSynced()) {
                     //load data from sqlite if data is synced.
-                    loadSyncedData(day_name);
+                    loadFromSyncedData(day_name);
                     Log.i(TAG, "No Internet Conenction : " + isOnline + " - is in Normal SQL Block ");
                 } else {
                     //tell no data is fetched
@@ -145,108 +138,109 @@ public class Home extends AppCompatActivity {
         }
     }
 
-    private void FetchAndStoreData() {
-        ParseQuery<ParseObject> parseQuery = ParseQuery.getQuery("te_b");
-        parseQuery.orderByAscending("sequence");
-        parseQuery.findInBackground(new FindCallback<ParseObject>() {
-            @Override
-            public void done(List<ParseObject> ttls, ParseException e) {
-                if (e == null) {
-                    int size = ttls.size();
-                    for (int i = 0; i < size; i++) {
-                        TimeTable tb = new TimeTable();
-                        ParseObject po = ttls.get(i);
-                        if (po.has(days.get(1))) {
-                            JSONObject job = po.getJSONObject(days.get(1));
-                            if (job != null)
-                                tb.setMONDAY(job.toString());
-                        }
-                        if (po.has(days.get(2))) {
-                            JSONObject job = po.getJSONObject(days.get(2));
-                            if (job != null)
-                                tb.setTUESDAY(job.toString());
-                        }
-                        if (po.has(days.get(3))) {
-                            JSONObject job = po.getJSONObject(days.get(3));
-                            if (job != null)
-                                tb.setWEDNESDAY(job.toString());
-                        }
-                        if (po.has(days.get(4))) {
-                            JSONObject job = po.getJSONObject(days.get(4));
-                            if (job != null)
-                                tb.setTHURSDAY(job.toString());
-                        }
-                        if (po.has(days.get(5))) {
-                            JSONObject job = po.getJSONObject(days.get(5));
-                            if (job != null)
-                                tb.setFRIDAY(job.toString());
-                        }
-                        tb.save();
-                        Log.i(TAG, "method list: " + "main list size " + tb.toString() + " seq. =" + po.get("sequence"));
-                    }
-//                    set data fetched pref
-                    p.setDataSynced(true);
-                }
-            }
-        });
-    }
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
-    private void loadSyncedData(String cday) {
-        if (cday.equals("MONDAY") || cday.equals("TUESDAY") || cday.equals("WEDNESDAY") || cday.equals("THURSDAY") || cday.equals("FRIDAY")) {
+    private void fetchAndSyncDataFromServer() {
+        ParseQuery<ParseObject> parseQuery = ParseQuery.getQuery(ApiHelper.TABLE_NAME);
+        parseQuery.orderByAscending(ApiHelper.Table.SEQUENCE).findInBackground(new FindCallback<ParseObject>() {
+            @Override
+            public void done(List<ParseObject> scheduleList, ParseException e) {
+                if (e == null) {
+                    int scheduleListSize = scheduleList.size();
+                    for (int i = 0; i < scheduleListSize; i++) {
+                        DatabaseService databaseService = new DatabaseService();
+                        ParseObject scheduleItem = scheduleList.get(i);
+                        if (scheduleItem.has(days.get(1))) {
+                            JSONObject job = scheduleItem.getJSONObject(days.get(1));
+                            if (job != null)
+                                databaseService.setMONDAY(job.toString());
+                        }
+                        if (scheduleItem.has(days.get(2))) {
+                            JSONObject job = scheduleItem.getJSONObject(days.get(2));
+                            if (job != null)
+                                databaseService.setTUESDAY(job.toString());
+                        }
+                        if (scheduleItem.has(days.get(3))) {
+                            JSONObject job = scheduleItem.getJSONObject(days.get(3));
+                            if (job != null)
+                                databaseService.setWEDNESDAY(job.toString());
+                        }
+                        if (scheduleItem.has(days.get(4))) {
+                            JSONObject job = scheduleItem.getJSONObject(days.get(4));
+                            if (job != null)
+                                databaseService.setTHURSDAY(job.toString());
+                        }
+                        if (scheduleItem.has(days.get(5))) {
+                            JSONObject job = scheduleItem.getJSONObject(days.get(5));
+                            if (job != null)
+                                databaseService.setFRIDAY(job.toString());
+                        }
+                        databaseService.save();
+                        Log.i(TAG, "method list: " + "main list size " + databaseService.toString() + " seq. =" + scheduleItem.get("sequence"));
+                    }
+//                    set data fetched pref
+                    preferenceService.setDataSynced(true);
+                }
+            }
+        });
+    }
+
+    private void loadFromSyncedData(String currentDay) {
+        if (currentDay.equals("MONDAY")
+                || currentDay.equals("TUESDAY") || currentDay.equals("WEDNESDAY")
+                || currentDay.equals("THURSDAY") || currentDay.equals("FRIDAY")) {
             dataset.clear();
             String time, ftime, ro_no, Sub, Techer, s_type;
             if (dataset.isEmpty()) {
-                pb.setVisibility(View.GONE);
+                progressBar.setVisibility(View.GONE);
                 //fetch data from SQLite data pass it to Adapter
-                List<TimeTable> daycol = new TimeTable().getDaySchedule(cday);
-                int size = daycol.size();
-                for (int i = 0; i < daycol.size(); i++) {
+                List<DatabaseService> schedules = new DatabaseService().getDaySchedule(currentDay);
+                int size = schedules.size();
+                for (int i = 0; i < schedules.size(); i++) {
                     try {
-                        TimeTable rowfirst = daycol.get(i);
+                        DatabaseService databaseService = schedules.get(i);
                         String time1 = "";
-                        switch (cday) {
+                        switch (currentDay) {
                             case "MONDAY":
-                                time1 = rowfirst.getMONDAY();
+                                time1 = databaseService.getMONDAY();
                                 break;
                             case "TUESDAY":
-                                time1 = rowfirst.getTUESDAY();
+                                time1 = databaseService.getTUESDAY();
                                 break;
                             case "WEDNESDAY":
-                                time1 = rowfirst.getWEDNESDAY();
+                                time1 = databaseService.getWEDNESDAY();
                                 break;
                             case "THURSDAY":
-                                time1 = rowfirst.getTHURSDAY();
+                                time1 = databaseService.getTHURSDAY();
                                 break;
                             case "FRIDAY":
-                                time1 = rowfirst.getFRIDAY();
+                                time1 = databaseService.getFRIDAY();
                                 break;
                         }
                         JSONObject firstjo = new JSONObject(time1);
                         if (i < size - 1) {
-                            TimeTable rowsecond = daycol.get(i + 1);
-                            String time2;
-                            time2 = rowsecond.getWEDNESDAY();
-                            switch (cday) {
+                            DatabaseService databaseService1 = schedules.get(i + 1);
+                            String time2 = "";
+//                            time2 = databaseService1.getWEDNESDAY();
+                            switch (currentDay) {
                                 case "MONDAY":
-                                    time2 = rowsecond.getMONDAY();
+                                    time2 = databaseService1.getMONDAY();
                                     break;
                                 case "TUESDAY":
-                                    time2 = rowsecond.getTUESDAY();
+                                    time2 = databaseService1.getTUESDAY();
                                     break;
                                 case "WEDNESDAY":
-                                    time2 = rowsecond.getWEDNESDAY();
+                                    time2 = databaseService1.getWEDNESDAY();
                                     break;
                                 case "THURSDAY":
-                                    time2 = rowsecond.getTHURSDAY();
+                                    time2 = databaseService1.getTHURSDAY();
                                     break;
                                 case "FRIDAY":
-                                    time2 = rowsecond.getFRIDAY();
+                                    time2 = databaseService1.getFRIDAY();
                                     break;
                             }
                             JSONObject secondjo = new JSONObject(time2);
@@ -257,32 +251,33 @@ public class Home extends AppCompatActivity {
                             Techer = firstjo.getString("Techer");
                             s_type = firstjo.getString("s_type");
                             if (!time.equals(ftime) && !s_type.equals("--")) {
-                                DataModel dm = new DataModel(time, ro_no, Sub, Techer, s_type);
+                                ScheduleData dm = new ScheduleData(time, ro_no, Sub, Techer, s_type);
                                 dataset.add(dm);
                                 sc.notifyDataSetChanged();
-                                pb.setVisibility(View.GONE);
-                                HomeList.setLayoutAnimation(controller);
-                                next.setEnabled(true);
-                                prev.setEnabled(true);
-                                Log.i(TAG, "Data - " + rowfirst.getWEDNESDAY());
+                                progressBar.setVisibility(View.GONE);
+                                ScheduleListView.setLayoutAnimation(controller);
+                                next_ibtn.setEnabled(true);
+                                previous_ibtn.setEnabled(true);
+                                Log.i(TAG, "Data - " + databaseService.getWEDNESDAY());
                             }
                         }
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
                 }
-                Log.i(TAG, "SQl_fetchd list Size: -" + daycol.size());
+                Log.i(TAG, "SQl_fetchd list Size: -" + schedules.size());
             }
         } else {
-            iv.setVisibility(View.VISIBLE);
-            pb.setVisibility(View.GONE);
+            empty_iv.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.GONE);
         }
     }
 
-
-    private void loadServerData(final String cday) {
-        if (cday.equals("MONDAY") || cday.equals("TUESDAY") || cday.equals("WEDNESDAY") || cday.equals("THURSDAY") || cday.equals("FRIDAY")) {
-//            pb.setVisibility(View.GONE);
+    private void loadFromServerData(final String cday) {
+        if (cday.equals("MONDAY")
+                || cday.equals("TUESDAY") || cday.equals("WEDNESDAY")
+                || cday.equals("THURSDAY") || cday.equals("FRIDAY")) {
+//            progressBar.setVisibility(View.GONE);
             dataset.clear();
             if (dataset.isEmpty()) {
                 ParseQuery<ParseObject> schedule = ParseQuery.getQuery("te_b");
@@ -308,14 +303,14 @@ public class Home extends AppCompatActivity {
                                             if (!s_type.equals("--") && !time.equals(nextObjectTime)) {
 //                                          Add dataModel To ListView adapter only of it's s_type is not "--"
 //                                          & current object time key value is not equal to nextObject time key value
-                                                DataModel dm = new DataModel(time, ro_no, sub, techr, s_type);
+                                                ScheduleData dm = new ScheduleData(time, ro_no, sub, techr, s_type);
                                                 dataset.add(dm);
                                                 sc.notifyDataSetChanged();
-                                                pb.setVisibility(View.GONE);
-                                                HomeList.setLayoutAnimation(controller);
-                                                next.setEnabled(true);
-                                                prev.setEnabled(true);
-//                                            Log.i(TAG, "Data ---++: " + o.getJSONObject(cday).get("Sub") + "- day position =" + o.getJSONObject(cday).toString());
+                                                progressBar.setVisibility(View.GONE);
+                                                ScheduleListView.setLayoutAnimation(controller);
+                                                next_ibtn.setEnabled(true);
+                                                previous_ibtn.setEnabled(true);
+
                                             }
                                         } else {
                                             Log.d(TAG, "done: Object o = null !");
@@ -333,14 +328,14 @@ public class Home extends AppCompatActivity {
                 });
             }
         } else {
-            iv.setVisibility(View.VISIBLE);
-            pb.setVisibility(View.GONE);
+            empty_iv.setVisibility(View.VISIBLE);
+            progressBar.setVisibility(View.GONE);
         }
     }
 
     private void BatchDialog() {
         String[] list = {"COMP-B1", "COMP-B2", "COMP-B3", "COMP-B4"};
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.dialog_row, R.id.dialog_list_row, list);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), R.layout.dialog_row, R.id.dialog_list_row, list);
         new LovelyChoiceDialog(this)
                 .setTopColorRes(R.color.colorAccent)
                 .setTitle("Select Your Batch")
@@ -350,10 +345,10 @@ public class Home extends AppCompatActivity {
                 .setItems(adapter, new LovelyChoiceDialog.OnItemSelectedListener<String>() {
                     @Override
                     public void onItemSelected(int position, String item) {
-                        p = new Preference(Home.this);
-                        p.setBatch(item);
-                        p.setFirstStartup(true);
-                        FetchAndStoreData();
+                        preferenceService = new PreferenceService(getApplicationContext());
+                        preferenceService.setBatch(item);
+                        preferenceService.setFirstStartup(true);
+                        fetchAndSyncDataFromServer();
                         Toast.makeText(Home.this, " Selected Batch" + item, Toast.LENGTH_SHORT).show();
                     }
                 })
@@ -362,10 +357,10 @@ public class Home extends AppCompatActivity {
 
     public void onNextClick(View v) {
         String nextday, cday;
-        pb.setVisibility(View.VISIBLE);
-        iv.setVisibility(View.GONE);
-        next.setEnabled(false);
-        prev.setEnabled(false);
+        progressBar.setVisibility(View.VISIBLE);
+        empty_iv.setVisibility(View.GONE);
+        next_ibtn.setEnabled(false);
+        previous_ibtn.setEnabled(false);
         if (days.contains(day_name)) {
             if (day_name.equals("MONDAY")
                     || day_name.equals("TUESDAY")
@@ -378,9 +373,9 @@ public class Home extends AppCompatActivity {
                 day_name = nextday;
                 day_tv.setText(nextday);
                 if (isOnline) {
-                    loadServerData(nextday);
+                    loadFromServerData(nextday);
                 } else {
-                    loadSyncedData(nextday);
+                    loadFromSyncedData(nextday);
                 }
                 Log.i(TAG, "onNextClick: From" + cday + " To " + nextday);
             }
@@ -390,7 +385,7 @@ public class Home extends AppCompatActivity {
                 day_name = nextday;
                 day_tv.setText(nextday);
                 dataset.clear();
-//                loadServerData(nextday);
+//                loadFromServerData(nextday);
                 Log.i(TAG, "onNextClick: From(Saturday)" + cday + " To " + nextday);
             }
             if (day_name.equals("SUNDAY")) {
@@ -400,9 +395,9 @@ public class Home extends AppCompatActivity {
                 day_tv.setText(nextday);
                 dataset.clear();
                 if (isOnline) {
-                    loadServerData(nextday);
+                    loadFromServerData(nextday);
                 } else {
-                    loadSyncedData(nextday);
+                    loadFromSyncedData(nextday);
                 }
                 Log.i(TAG, "onNextClick: From(Sunday)" + cday + " To " + nextday);
             }
@@ -411,10 +406,10 @@ public class Home extends AppCompatActivity {
 
     public void onPrevClick(View v) {
         String prevday, cday;
-        pb.setVisibility(View.VISIBLE);
-        iv.setVisibility(View.GONE);
-        next.setEnabled(false);
-        prev.setEnabled(false);
+        progressBar.setVisibility(View.VISIBLE);
+        empty_iv.setVisibility(View.GONE);
+        next_ibtn.setEnabled(false);
+        previous_ibtn.setEnabled(false);
         if (days.contains(day_name)) {
             if (day_name.equals("MONDAY")
                     || day_name.equals("TUESDAY")
@@ -428,9 +423,9 @@ public class Home extends AppCompatActivity {
                     day_name = prevday;
                     day_tv.setText(prevday);
                     if (isOnline) {
-                        loadServerData(prevday);
+                        loadFromServerData(prevday);
                     } else {
-                        loadSyncedData(prevday);
+                        loadFromSyncedData(prevday);
                     }
                     Log.i(TAG, "onPrevClick: From " + cday + " To " + prevday);
                 } else {
@@ -439,9 +434,9 @@ public class Home extends AppCompatActivity {
                     day_tv.setText(prevday);
                     dataset.clear();
                     if (isOnline) {
-                        loadServerData(prevday);
+                        loadFromServerData(prevday);
                     } else {
-                        loadSyncedData(prevday);
+                        loadFromSyncedData(prevday);
                     }
                     Log.i(TAG, "onPrevClick: Day Saturday is set !");
                 }
@@ -452,7 +447,7 @@ public class Home extends AppCompatActivity {
                 day_name = prevday;
                 day_tv.setText(prevday);
                 dataset.clear();
-//                loadServerData(nextday);
+//                loadFromServerData(nextday);
                 Log.i(TAG, "onPrevClick: From (Sunday)" + cday + " To " + prevday);
             }
             if (day_name.equals("SATURDAY")) {
@@ -462,9 +457,9 @@ public class Home extends AppCompatActivity {
                 day_tv.setText(prevday);
                 dataset.clear();
                 if (isOnline) {
-                    loadServerData(prevday);
+                    loadFromServerData(prevday);
                 } else {
-                    loadSyncedData(prevday);
+                    loadFromSyncedData(prevday);
                 }
                 Log.i(TAG, "onPrevClick: From (Saturday)" + cday + " To " + prevday);
             }

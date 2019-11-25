@@ -12,8 +12,8 @@ import java.util.List;
 /**
  * Created by khach on 12-12-2017.
  */
-@Table(name = "ankittb")
-public class TimeTable extends Model {
+@Table(name = "scheduleTable")
+public class DatabaseService extends Model {
     @Column(name = "seq")
     private int SEQ;
     @Column(name = "monday")
@@ -27,7 +27,7 @@ public class TimeTable extends Model {
     @Column(name = "friday")
     private String FRIDAY;
 
-    public TimeTable() {
+    public DatabaseService() {
         super();
     }
 
@@ -89,28 +89,28 @@ public class TimeTable extends Model {
         }
     }
 
-    public List<TimeTable> getDaySchedule(String day_selected) {
-        List<TimeTable> col = null;
+    public List<DatabaseService> getDaySchedule(String day_selected) {
+        List<DatabaseService> col = null;
         String raw;
         if (day_selected.equals("MONDAY")) {
-            col = new Select("Id,monday").from(TimeTable.class).orderBy("Id ASC").execute();
-            Log.i("TimeTable", "getDaySchedule: column Monday");
+            col = new Select("Id,monday").from(DatabaseService.class).orderBy("Id ASC").execute();
+            Log.i("DatabaseService", "getDaySchedule: column Monday");
         }
         if (day_selected.equals("TUESDAY")) {
-            col = new Select("Id,tuesday").from(TimeTable.class).orderBy("Id ASC").execute();
-            Log.i("TimeTable", "getDaySchedule: column Tuesday");
+            col = new Select("Id,tuesday").from(DatabaseService.class).orderBy("Id ASC").execute();
+            Log.i("DatabaseService", "getDaySchedule: column Tuesday");
         }
         if (day_selected.equals("WEDNESDAY")) {
-            col = new Select("Id,wednesday").from(TimeTable.class).orderBy("Id ASC").execute();
-            Log.i("TimeTable", "getDaySchedule: column Wednesday");
+            col = new Select("Id,wednesday").from(DatabaseService.class).orderBy("Id ASC").execute();
+            Log.i("DatabaseService", "getDaySchedule: column Wednesday");
         }
         if (day_selected.equals("THURSDAY")) {
-            col = new Select("Id,thursday").from(TimeTable.class).orderBy("Id ASC").execute();
-            Log.i("TimeTable", "getDaySchedule: column Thursday");
+            col = new Select("Id,thursday").from(DatabaseService.class).orderBy("Id ASC").execute();
+            Log.i("DatabaseService", "getDaySchedule: column Thursday");
         }
         if (day_selected.equals("FRIDAY")) {
-            col = new Select("Id,friday").from(TimeTable.class).orderBy("Id ASC").execute();
-            Log.i("TimeTable", "getDaySchedule: column Friday");
+            col = new Select("Id,friday").from(DatabaseService.class).orderBy("Id ASC").execute();
+            Log.i("DatabaseService", "getDaySchedule: column Friday");
         }
         return col;
     }

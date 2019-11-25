@@ -13,7 +13,7 @@
         tools:ignore="AllowBackup,GoogleAppIndexingWarning">
         <meta-data
             android:name="AA_DB_NAME"
-            android:value="table.db" />
+            android:value="timeTableDatabase.db" />
         <meta-data
             android:name="AA_MODELS"
             android:value="ankit.com.timetable.orm.TimeTable" />

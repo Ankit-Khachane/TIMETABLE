@@ -14,7 +14,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import ankit.com.timetable.R;
-import ankit.com.timetable.model.DataModel;
+import ankit.com.timetable.model.ScheduleData;
 
 
 /**
@@ -23,13 +23,13 @@ import ankit.com.timetable.model.DataModel;
 
 public class ScheduleListAdapter extends BaseAdapter {
     private final Context context;
-    private final List<DataModel> dataModels;
+    private final List<ScheduleData> scheduleData;
     String TAG = "ScheduleListAdapter";
 
 
-    public ScheduleListAdapter(Context context, List<DataModel> o) {
+    public ScheduleListAdapter(Context context, List<ScheduleData> o) {
         this.context = context;
-        this.dataModels = o;
+        this.scheduleData = o;
     }
 
     @SuppressLint("ResourceAsColor")
@@ -48,7 +48,7 @@ public class ScheduleListAdapter extends BaseAdapter {
             if (convertView != null)
                 h = (ViewHolder) convertView.getTag();
         }
-        DataModel item = (DataModel) getItem(position);
+        ScheduleData item = (ScheduleData) getItem(position);
         if (item != null) {
 
             String time = item.getTime();
@@ -81,17 +81,17 @@ public class ScheduleListAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return dataModels.size();
+        return scheduleData.size();
     }
 
     @Override
     public Object getItem(int i) {
-        return dataModels.get(i);
+        return scheduleData.get(i);
     }
 
     @Override
     public long getItemId(int i) {
-        return dataModels.indexOf(getItem(i));
+        return scheduleData.indexOf(getItem(i));
     }
 
     private class ViewHolder {

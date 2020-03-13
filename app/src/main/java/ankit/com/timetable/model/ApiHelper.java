@@ -4,7 +4,7 @@ public final class ApiHelper {
     public static final String DATABASE_SERVER = "DatabaseService";
     public static final String TABLE_NAME = "te_b";
 
-    public final class Table {
+    public static final class Table {
         public static final String SEQUENCE = "sequence";
         public static final String MONDAY = "MONDAY";
         public static final String TUESDAY = "TUESDAY";

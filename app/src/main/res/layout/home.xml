@@ -8,7 +8,7 @@
     android:background="@drawable/round_corner_background"
     tools:context="ankit.com.timetable.view.Home">
 
-    <android.support.v7.widget.Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/tb_home"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,7 +32,7 @@
             android:textSize="24sp"
             android:textStyle="bold"
             tools:ignore="RtlSymmetry" />
-    </android.support.v7.widget.Toolbar>
+    </androidx.appcompat.widget.Toolbar>
 
     <LinearLayout
         android:id="@+id/day_tab"

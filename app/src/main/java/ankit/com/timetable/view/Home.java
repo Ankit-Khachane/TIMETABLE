@@ -2,14 +2,12 @@ package ankit.com.timetable.view;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.view.animation.LayoutAnimationController;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -18,8 +16,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.parse.FindCallback;
-import com.parse.ParseException;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
+import com.blankj.utilcode.util.NetworkUtils;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.yarolegovich.lovelydialog.LovelyChoiceDialog;
@@ -33,32 +33,36 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import ankit.com.timetable.R;
 import ankit.com.timetable.model.ApiHelper;
-import ankit.com.timetable.model.DatabaseService;
 import ankit.com.timetable.model.PreferenceService;
 import ankit.com.timetable.model.ScheduleData;
+import ankit.com.timetable.model.ScheduleTable;
 import ankit.com.timetable.presenter.ScheduleListAdapter;
-import ankit.com.timetable.utils.NetworkUtil;
+import ankit.com.timetable.utils.BasicUtils;
+import timber.log.Timber;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
-public class Home extends AppCompatActivity {
-    // TODO: 24-11-2019 Refractor Project to Android MVP Pattern.
+public class Home extends AppCompatActivity implements AdapterView.OnItemClickListener {
+    // TODO: 24-11-2019 Refactor Project to Android MVP Pattern.
 
     private static final List<String> DAYS = Arrays.asList("SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY");
     private final String TAG = getClass().getSimpleName();
     private boolean isOnline;
-    private PreferenceService preferenceService;
-    private TextView day_tv;
-    private ScheduleListAdapter scheduleListAdapter;
-    private ListView ScheduleListView;
-    private ImageView empty_iv;
-    private ProgressBar progressBar;
-    private LayoutAnimationController controller;
-    private ImageButton next_ibtn, previous_ibtn;
-    private String time, techr, sub, s_type, ro_no, day_name;
-    private List<ScheduleData> dataset;
+    private PreferenceService mPreferenceService;
+    private TextView mDayTv;
+    private ImageView mEmptyPlaceHolderView;
+    private ProgressBar mProgressView;
+    private ListView mListView;
+    private ImageButton mNextBtn, mPreviousBtn;
+    private ScheduleListAdapter mAdapter;
+    private LayoutAnimationController mAnimationController;
+    private String time, teacher, subject, type, room_no, current_day_name;
+    private List<ScheduleData> mDataSet;
+    private ScheduleTable mScheduleTable;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,12 +71,12 @@ public class Home extends AppCompatActivity {
 
 
         Toolbar toolbar = findViewById(R.id.tb_home);
-        empty_iv = findViewById(R.id.empty_view);
-        next_ibtn = findViewById(R.id.next);
-        previous_ibtn = findViewById(R.id.previous);
-        day_tv = findViewById(R.id.dayname);
-        progressBar = findViewById(R.id.progressBar);
-        progressBar.setVisibility(View.VISIBLE);
+        mEmptyPlaceHolderView = findViewById(R.id.empty_view);
+        mNextBtn = findViewById(R.id.next);
+        mPreviousBtn = findViewById(R.id.previous);
+        mDayTv = findViewById(R.id.dayname);
+        mProgressView = findViewById(R.id.progressBar);
+        mProgressView.setVisibility(View.VISIBLE);
 
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null)
@@ -80,55 +84,54 @@ public class Home extends AppCompatActivity {
 
         Date date = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE", Locale.US);
-        day_name = dateFormat.format(date).toUpperCase();
-        day_tv.setText(day_name);
+        current_day_name = dateFormat.format(date).toUpperCase();
+        mDayTv.setText(current_day_name);
 
-        dataset = new ArrayList<>();
-        scheduleListAdapter = new ScheduleListAdapter(this, dataset);
-        ScheduleListView = findViewById(R.id.main_list);
-        controller = AnimationUtils.loadLayoutAnimation(this, R.anim.list_row_anime);
-        ScheduleListView.setAdapter(scheduleListAdapter);
-        preferenceService = new PreferenceService(this);
+        mDataSet = new ArrayList<>();
+        mAdapter = new ScheduleListAdapter(this, mDataSet);
+        mListView = findViewById(R.id.main_list);
+        mAnimationController = AnimationUtils.loadLayoutAnimation(this, R.anim.list_row_anime);
+        mListView.setAdapter(mAdapter);
+        mListView.setOnItemClickListener(this);
+        mPreferenceService = new PreferenceService(this);
         //if (isNetworkConnected() && isInternetWorking())
-        if (NetworkUtil.isNetworkConnected(getApplicationContext())) {
+        if (NetworkUtils.isConnected()) {
             //On Internet Connection
             isOnline = true;
-            if (preferenceService.getFirstStartFlag() && preferenceService.getBatch().equals("") && !preferenceService.getDataSynced()) {
+            if (mPreferenceService.getFirstStartFlag() && mPreferenceService.getBatch().equals("") && !mPreferenceService.getDataSynced()) {
                 //if this is first launch
-                // call -> Dialog call -> 1.FetchAndSync() + 2.laodSyncedData();
                 BatchDialog();
-                Log.i(TAG, "Yes Internet Conenction : " + isOnline + " - is in First Lunch Block ");
+                Timber.tag(TAG).i("Yes Internet Connection : " + isOnline + " - is in First Lunch Block ");
             } else {
                 //this is not first launch
-                if (preferenceService.getDataSynced()) {
-                    //if this is normal launch then fetch data w.r.t pref> datasynced and laodSyncedData().
-                    loadFromSyncedData(day_name);
-                    Log.i(TAG, "Yes Internet Conenction : " + isOnline + " - is in Normal SQL Block ");
+                if (mPreferenceService.getDataSynced()) {
+                    //if this is normal launch then fetch data
+                    loadFromSyncedData(current_day_name);
+                    Timber.tag(TAG).i("Yes Internet Connection : " + isOnline + " - is in Normal SQL Block ");
                 } else {
                     //load data from server via internet
-                    loadFromServerData(day_name);
-                    Log.i(TAG, "Yes Internet Conenction : " + isOnline + " - is in Normal Server Fetch Block ");
+                    loadFromServerData(current_day_name);
+                    Timber.tag(TAG).i("Yes Internet Connection : " + isOnline + " - is in Normal Server Fetch Block ");
                 }
             }
             Toast.makeText(this, "Internet Connection Detected", Toast.LENGTH_SHORT).show();
         } else {
             //No network connection
             isOnline = false;
-            if (preferenceService.getFirstStartFlag() && preferenceService.getBatch().equals("") && !preferenceService.getDataSynced()) {
+            if (mPreferenceService.getFirstStartFlag() && mPreferenceService.getBatch().equals("") && !mPreferenceService.getDataSynced()) {
                 //if this is first launch
-                //guide user to connect to Intenet Atleast One Time
-                Log.i(TAG, "No Internet Conenction : " + isOnline + " - is in First Lunch Block ");
+                //guide user to connect to Internet at least One Time
+                Timber.tag(TAG).i("No Internet Connection : " + isOnline + " - is in First Lunch Block ");
             } else {
                 //if this is normal launch
-                if (preferenceService.getDataSynced()) {
+                if (mPreferenceService.getDataSynced()) {
                     //load data from sqlite if data is synced.
-                    loadFromSyncedData(day_name);
-                    Log.i(TAG, "No Internet Conenction : " + isOnline + " - is in Normal SQL Block ");
+                    loadFromSyncedData(current_day_name);
+                    Timber.tag(TAG).i("No Internet Connection : " + isOnline + " - is in Normal SQL Block ");
                 } else {
                     //tell no data is fetched
                     //suggest to connect to Internet and follow
-                    //checkinternet -> FetchAndLoadData() -> checksynched ->loadSynchedData()
-                    Log.i(TAG, "No Internet Conenction : " + isOnline + " - is in No Data Stored Block ");
+                    Timber.tag(TAG).i("No Internet Connection : " + isOnline + " - is in No Data Stored Block ");
                 }
             }
             Toast.makeText(this, "No Internet Connection !", Toast.LENGTH_SHORT).show();
@@ -137,190 +140,148 @@ public class Home extends AppCompatActivity {
 
     private void fetchAndSyncDataFromServer() {
         ParseQuery<ParseObject> parseQuery = ParseQuery.getQuery(ApiHelper.TABLE_NAME);
-        parseQuery.orderByAscending(ApiHelper.Table.SEQUENCE).findInBackground(new FindCallback<ParseObject>() {
-            @Override
-            public void done(List<ParseObject> scheduleList, ParseException e) {
-                if (e == null) {
-                    int scheduleListSize = scheduleList.size();
-                    for (int i = 0; i < scheduleListSize; i++) {
-                        DatabaseService databaseService = new DatabaseService();
-                        ParseObject scheduleItem = scheduleList.get(i);
-                        if (scheduleItem.has(DAYS.get(1))) {
-                            JSONObject job = scheduleItem.getJSONObject(DAYS.get(1));
-                            if (job != null)
-                                databaseService.setMONDAY(job.toString());
-                        }
-                        if (scheduleItem.has(DAYS.get(2))) {
-                            JSONObject job = scheduleItem.getJSONObject(DAYS.get(2));
-                            if (job != null)
-                                databaseService.setTUESDAY(job.toString());
-                        }
-                        if (scheduleItem.has(DAYS.get(3))) {
-                            JSONObject job = scheduleItem.getJSONObject(DAYS.get(3));
-                            if (job != null)
-                                databaseService.setWEDNESDAY(job.toString());
-                        }
-                        if (scheduleItem.has(DAYS.get(4))) {
-                            JSONObject job = scheduleItem.getJSONObject(DAYS.get(4));
-                            if (job != null)
-                                databaseService.setTHURSDAY(job.toString());
-                        }
-                        if (scheduleItem.has(DAYS.get(5))) {
-                            JSONObject job = scheduleItem.getJSONObject(DAYS.get(5));
-                            if (job != null)
-                                databaseService.setFRIDAY(job.toString());
-                        }
-                        databaseService.save();
-                        Log.i(TAG, "method list: " + "main list size " + databaseService.toString() + " seq. =" + scheduleItem.get("sequence"));
+        parseQuery.orderByAscending(ApiHelper.Table.SEQUENCE).findInBackground((scheduleList, e) -> {
+            if (e == null) {
+                int scheduleListSize = scheduleList.size();
+                for (int i = 0; i < scheduleListSize; i++) {
+                    mScheduleTable = new ScheduleTable();
+                    ParseObject scheduleItem = scheduleList.get(i);
+                    if (scheduleItem.has(DAYS.get(1))) {
+                        JSONObject mondayJson = scheduleItem.getJSONObject(DAYS.get(1));
+                        if (mondayJson != null)
+                            mScheduleTable.setMONDAY(mondayJson.toString());
                     }
-//                    set data fetched pref
-                    preferenceService.setDataSynced(true);
+                    if (scheduleItem.has(DAYS.get(2))) {
+                        JSONObject tuesdayJson = scheduleItem.getJSONObject(DAYS.get(2));
+                        if (tuesdayJson != null)
+                            mScheduleTable.setTUESDAY(tuesdayJson.toString());
+                    }
+                    if (scheduleItem.has(DAYS.get(3))) {
+                        JSONObject wednesdayJson = scheduleItem.getJSONObject(DAYS.get(3));
+                        if (wednesdayJson != null)
+                            mScheduleTable.setWEDNESDAY(wednesdayJson.toString());
+                    }
+                    if (scheduleItem.has(DAYS.get(4))) {
+                        JSONObject thursdayJson = scheduleItem.getJSONObject(DAYS.get(4));
+                        if (thursdayJson != null)
+                            mScheduleTable.setTHURSDAY(thursdayJson.toString());
+                    }
+                    if (scheduleItem.has(DAYS.get(5))) {
+                        JSONObject fridayJson = scheduleItem.getJSONObject(DAYS.get(5));
+                        if (fridayJson != null)
+                            mScheduleTable.setFRIDAY(fridayJson.toString());
+                    }
+                    mScheduleTable.save();
+                    Timber.tag(TAG).i("method list: " + "main list size " + mScheduleTable.toString() + " seq. =" + scheduleItem.get("sequence"));
                 }
+//                    set data fetched pref
+                mPreferenceService.setDataSynced(true);
             }
         });
     }
 
     private void loadFromSyncedData(String currentDay) {
-        if (currentDay.equals("MONDAY")
-                || currentDay.equals("TUESDAY") || currentDay.equals("WEDNESDAY")
-                || currentDay.equals("THURSDAY") || currentDay.equals("FRIDAY")) {
-            dataset.clear();
-            String time, ftime, ro_no, Sub, Techer, s_type;
-            if (dataset.isEmpty()) {
-                progressBar.setVisibility(View.GONE);
+        if (BasicUtils.getDayBy(currentDay)) {
+            mDataSet.clear();
+            String time, nextTime, room_no, subject, teacher, type;
+            if (mDataSet.isEmpty()) {
+                mProgressView.setVisibility(View.GONE);
                 //fetch data from SQLite data pass it to Adapter
-                List<DatabaseService> schedules = new DatabaseService().getDaySchedule(currentDay);
+                List<ScheduleTable> schedules = mScheduleTable.getDaySchedule(currentDay);
                 int size = schedules.size();
                 for (int i = 0; i < schedules.size(); i++) {
                     try {
-                        DatabaseService databaseService = schedules.get(i);
-                        String time1 = "";
-                        switch (currentDay) {
-                            case "MONDAY":
-                                time1 = databaseService.getMONDAY();
-                                break;
-                            case "TUESDAY":
-                                time1 = databaseService.getTUESDAY();
-                                break;
-                            case "WEDNESDAY":
-                                time1 = databaseService.getWEDNESDAY();
-                                break;
-                            case "THURSDAY":
-                                time1 = databaseService.getTHURSDAY();
-                                break;
-                            case "FRIDAY":
-                                time1 = databaseService.getFRIDAY();
-                                break;
-                        }
-                        JSONObject firstjo = new JSONObject(time1);
+                        ScheduleTable scheduleTable = schedules.get(i);
+                        String todayScheduleData = BasicUtils.getTableByCurrentDay(currentDay, scheduleTable);
+                        JSONObject todaySchedule = new JSONObject(todayScheduleData);
                         if (i < size - 1) {
-                            DatabaseService databaseService1 = schedules.get(i + 1);
-                            String time2 = "";
-//                            time2 = databaseService1.getWEDNESDAY();
-                            switch (currentDay) {
-                                case "MONDAY":
-                                    time2 = databaseService1.getMONDAY();
-                                    break;
-                                case "TUESDAY":
-                                    time2 = databaseService1.getTUESDAY();
-                                    break;
-                                case "WEDNESDAY":
-                                    time2 = databaseService1.getWEDNESDAY();
-                                    break;
-                                case "THURSDAY":
-                                    time2 = databaseService1.getTHURSDAY();
-                                    break;
-                                case "FRIDAY":
-                                    time2 = databaseService1.getFRIDAY();
-                                    break;
-                            }
-                            JSONObject secondjo = new JSONObject(time2);
-                            time = firstjo.getString("time");
-                            ftime = secondjo.getString("time");
-                            ro_no = firstjo.getString("ro_no");
-                            Sub = firstjo.getString("Sub");
-                            Techer = firstjo.getString("Techer");
-                            s_type = firstjo.getString("s_type");
-                            if (!time.equals(ftime) && !s_type.equals("--")) {
-                                ScheduleData dm = new ScheduleData(time, ro_no, Sub, Techer, s_type);
-                                dataset.add(dm);
-                                scheduleListAdapter.notifyDataSetChanged();
-                                progressBar.setVisibility(View.GONE);
-                                ScheduleListView.setLayoutAnimation(controller);
-                                next_ibtn.setEnabled(true);
-                                previous_ibtn.setEnabled(true);
-                                Log.i(TAG, "Data - " + databaseService.getWEDNESDAY());
+                            ScheduleTable nextSchedule = schedules.get(i + 1);
+                            String nextScheduleData = BasicUtils.getTableByCurrentDay(currentDay, nextSchedule);
+                            JSONObject nextDaySchedule = new JSONObject(nextScheduleData);
+                            time = todaySchedule.getString("time");
+                            nextTime = nextDaySchedule.getString("time");
+                            room_no = todaySchedule.getString("room_no");
+                            subject = todaySchedule.getString("subject");
+                            teacher = todaySchedule.getString("teacher");
+                            type = todaySchedule.getString("type");
+                            if (!time.equals(nextTime) && !type.equals("--")) {
+                                ScheduleData dm = new ScheduleData(time, room_no, subject, teacher, type);
+                                mDataSet.add(dm);
+                                mAdapter.notifyDataSetChanged();
+                                mProgressView.setVisibility(View.GONE);
+                                mListView.setLayoutAnimation(mAnimationController);
+                                mNextBtn.setEnabled(true);
+                                mPreviousBtn.setEnabled(true);
+                                Timber.tag(TAG).i("Data - %s", scheduleTable.getWEDNESDAY());
                             }
                         }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                    } catch (JSONException jsonException) {
+                        jsonException.printStackTrace();
                     }
                 }
-                Log.i(TAG, "SQl_fetchd list Size: -" + schedules.size());
+                Timber.tag(TAG).i("SQL fetched list Size: -%s", schedules.size());
             }
         } else {
-            empty_iv.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.GONE);
+            mEmptyPlaceHolderView.setVisibility(View.VISIBLE);
+            mProgressView.setVisibility(View.GONE);
         }
     }
 
-    private void loadFromServerData(final String cday) {
-        if (cday.equals("MONDAY")
-                || cday.equals("TUESDAY") || cday.equals("WEDNESDAY")
-                || cday.equals("THURSDAY") || cday.equals("FRIDAY")) {
+    private void loadFromServerData(final String currentDay) {
+        if (BasicUtils.getDayBy(currentDay)) {
 //            progressBar.setVisibility(View.GONE);
-            dataset.clear();
-            if (dataset.isEmpty()) {
+            mDataSet.clear();
+            if (mDataSet.isEmpty()) {
                 ParseQuery<ParseObject> schedule = ParseQuery.getQuery(ApiHelper.TABLE_NAME);
                 schedule.orderByAscending(ApiHelper.Table.SEQUENCE)
-                        .findInBackground(new FindCallback<ParseObject>() {
-                            @Override
-                            public void done(List<ParseObject> list, ParseException e) {
-                                if (e == null) {
-                                    int n = list.size();
-                                    // get output list and add it to adapter list parameter list
-                                    for (int i = 0; i < list.size(); i++) {
-                                        ParseObject o = list.get(i);
-                                        if (i < n - 1) {
-                                            ParseObject oo = list.get(i + 1);
-                                            try {
-                                                if (o != null) {
-                                                    time = o.getJSONObject(cday).getString("time");
-                                                    String nextObjectTime = oo.getJSONObject(cday).getString("time");
-                                                    s_type = o.getJSONObject(cday).getString("s_type");
-                                                    sub = o.getJSONObject(cday).getString("Sub");
-                                                    ro_no = o.getJSONObject(cday).getString("ro_no");
-                                                    techr = o.getJSONObject(cday).getString("Techer");
-                                                    if (!s_type.equals("--") && !time.equals(nextObjectTime)) {
-//                                          Add dataModel To ListView adapter only of it's s_type is not "--"
-//                                          & current object time key value is not equal to nextObject time key value
-                                                        ScheduleData dm = new ScheduleData(time, ro_no, sub, techr, s_type);
-                                                        dataset.add(dm);
-                                                        scheduleListAdapter.notifyDataSetChanged();
-                                                        progressBar.setVisibility(View.GONE);
-                                                        ScheduleListView.setLayoutAnimation(controller);
-                                                        next_ibtn.setEnabled(true);
-                                                        previous_ibtn.setEnabled(true);
+                        .findInBackground((list, e) -> {
+                            if (e == null) {
+                                int size = list.size();
+                                // get output list and add it to adapter list parameter list
+                                for (int i = 0; i < list.size(); i++) {
+                                    ParseObject currentDayJson = list.get(i);
+                                    if (i < size - 1) {
+                                        ParseObject nextDayJson = list.get(i + 1);
+                                        try {
+                                            if (currentDayJson != null) {
 
-                                                    }
-                                                } else {
-                                                    Log.d(TAG, "done: Object o = null !");
+                                                JSONObject currentDayData = Objects.requireNonNull(currentDayJson.getJSONObject(currentDay));
+                                                JSONObject nextDayData = Objects.requireNonNull(nextDayJson.getJSONObject(currentDay));
+
+                                                String nextObjectTime = nextDayData.getString("time");
+                                                time = currentDayData.getString("time");
+                                                type = currentDayData.getString("type");
+                                                subject = currentDayData.getString("subject");
+                                                room_no = currentDayData.getString("room_no");
+                                                teacher = currentDayData.getString("teacher");
+                                                if (!type.equals("--") && !time.equals(nextObjectTime)) {
+                                                    /*Add dataModel To ListView adapter only of it's s_type is not "--"
+                                                     & current object time key value is not equal to nextObject time key value*/
+                                                    ScheduleData dm = new ScheduleData(time, room_no, subject, teacher, type);
+                                                    mDataSet.add(dm);
+                                                    mAdapter.notifyDataSetChanged();
+                                                    mProgressView.setVisibility(View.GONE);
+                                                    mListView.setLayoutAnimation(mAnimationController);
+                                                    mNextBtn.setEnabled(true);
+                                                    mPreviousBtn.setEnabled(true);
                                                 }
-                                            } catch (JSONException e1) {
-                                                e1.printStackTrace();
+                                            } else {
+                                                Timber.tag(TAG).d("done: Object o = null !");
                                             }
+                                        } catch (JSONException jsonException) {
+                                            jsonException.printStackTrace();
                                         }
                                     }
-                                } else {
-                                    //data fetch failed
-                                    Log.d(TAG, "done: Data Fetched Failed !");
                                 }
+                            } else {
+                                //data fetch failed
+                                Timber.tag(TAG).d("done: Data Fetched Failed !");
                             }
                         });
             }
         } else {
-            empty_iv.setVisibility(View.VISIBLE);
-            progressBar.setVisibility(View.GONE);
+            mEmptyPlaceHolderView.setVisibility(View.VISIBLE);
+            mProgressView.setVisibility(View.GONE);
         }
     }
 
@@ -333,126 +294,114 @@ public class Home extends AppCompatActivity {
                 .setCancelable(false)
                 .setIcon(R.drawable.dialog_header_icon)
                 .setMessage("Selected Batch Will Be Default")
-                .setItems(adapter, new LovelyChoiceDialog.OnItemSelectedListener<String>() {
-                    @Override
-                    public void onItemSelected(int position, String item) {
-                        preferenceService = new PreferenceService(getApplicationContext());
-                        preferenceService.setBatch(item);
-                        preferenceService.setFirstStartup(true);
-                        fetchAndSyncDataFromServer();
-                        Toast.makeText(Home.this, " Selected Batch" + item, Toast.LENGTH_SHORT).show();
-                    }
+                .setItems(adapter, (position, item) -> {
+                    mPreferenceService = new PreferenceService(getApplicationContext());
+                    mPreferenceService.setBatch(item);
+                    mPreferenceService.setFirstStartup(true);
+                    fetchAndSyncDataFromServer();
+                    mAdapter.notifyDataSetChanged();
+                    Toast.makeText(Home.this, " Selected Batch" + item, Toast.LENGTH_SHORT).show();
                 })
                 .show();
     }
 
     public void onNextClick(View v) {
         String nextDay, currentDay;
-        progressBar.setVisibility(View.VISIBLE);
-        empty_iv.setVisibility(View.GONE);
-        next_ibtn.setEnabled(false);
-        previous_ibtn.setEnabled(false);
-        if (DAYS.contains(day_name)) {
-            if (day_name.equals("MONDAY")
-                    || day_name.equals("TUESDAY")
-                    || day_name.equals("WEDNESDAY")
-                    || day_name.equals("THURSDAY")
-                    || day_name.equals("FRIDAY")) {
-                int i = DAYS.indexOf(day_name);
-                currentDay = day_name;
+        mProgressView.setVisibility(View.VISIBLE);
+        mEmptyPlaceHolderView.setVisibility(View.GONE);
+        mNextBtn.setEnabled(false);
+        mPreviousBtn.setEnabled(false);
+        if (DAYS.contains(current_day_name)) {
+            if (BasicUtils.getDayBy(current_day_name)) {
+                int i = DAYS.indexOf(current_day_name);
+                currentDay = current_day_name;
                 nextDay = DAYS.get(i + 1);
-                day_name = nextDay;
-                day_tv.setText(nextDay);
+                current_day_name = nextDay;
+                mDayTv.setText(nextDay);
                 if (isOnline) {
                     loadFromServerData(nextDay);
                 } else {
                     loadFromSyncedData(nextDay);
                 }
-                Log.i(TAG, "onNextClick: From" + currentDay + " To " + nextDay);
+                Timber.tag(TAG).i("onNextClick: From" + currentDay + " To " + nextDay);
             }
-            if (day_name.equals("SATURDAY")) {
-                currentDay = day_name;
+            if (current_day_name.equals("SATURDAY")) {
+                currentDay = current_day_name;
                 nextDay = DAYS.get(0);
-                day_name = nextDay;
-                day_tv.setText(nextDay);
-                dataset.clear();
-//                loadFromServerData(nextday);
-                Log.i(TAG, "onNextClick: From(Saturday)" + currentDay + " To " + nextDay);
+                current_day_name = nextDay;
+                mDayTv.setText(nextDay);
+                mDataSet.clear();
+                Timber.tag(TAG).i("onNextClick: From(Saturday)" + currentDay + " To " + nextDay);
             }
-            if (day_name.equals("SUNDAY")) {
-                currentDay = day_name;
+            if (current_day_name.equals("SUNDAY")) {
+                currentDay = current_day_name;
                 nextDay = DAYS.get(1);
-                day_name = nextDay;
-                day_tv.setText(nextDay);
-                dataset.clear();
+                current_day_name = nextDay;
+                mDayTv.setText(nextDay);
+                mDataSet.clear();
                 if (isOnline) {
                     loadFromServerData(nextDay);
                 } else {
                     loadFromSyncedData(nextDay);
                 }
-                Log.i(TAG, "onNextClick: From(Sunday)" + currentDay + " To " + nextDay);
+                Timber.tag(TAG).i("onNextClick: From(Sunday)" + currentDay + " To " + nextDay);
             }
         }
     }
 
     public void onPrevClick(View v) {
         String previousDay, currentDay;
-        progressBar.setVisibility(View.VISIBLE);
-        empty_iv.setVisibility(View.GONE);
-        next_ibtn.setEnabled(false);
-        previous_ibtn.setEnabled(false);
-        if (DAYS.contains(day_name)) {
-            if (day_name.equals("MONDAY")
-                    || day_name.equals("TUESDAY")
-                    || day_name.equals("WEDNESDAY")
-                    || day_name.equals("THURSDAY")
-                    || day_name.equals("FRIDAY")) {
-                int i = DAYS.indexOf(day_name);
-                currentDay = day_name;
-                if (i > 1) {
-                    previousDay = DAYS.get(i - 1);
-                    day_name = previousDay;
-                    day_tv.setText(previousDay);
+        mProgressView.setVisibility(View.VISIBLE);
+        mEmptyPlaceHolderView.setVisibility(View.GONE);
+        mNextBtn.setEnabled(false);
+        mPreviousBtn.setEnabled(false);
+        if (DAYS.contains(current_day_name)) {
+            if (BasicUtils.getDayBy(current_day_name)) {
+                int currentDayIndex = DAYS.indexOf(current_day_name);
+                currentDay = current_day_name;
+                if (currentDayIndex > 1) {
+                    previousDay = DAYS.get(currentDayIndex - 1);
+                    current_day_name = previousDay;
+                    mDayTv.setText(previousDay);
                     if (isOnline) {
                         loadFromServerData(previousDay);
                     } else {
                         loadFromSyncedData(previousDay);
                     }
-                    Log.i(TAG, "onPrevClick: From " + currentDay + " To " + previousDay);
+                    Timber.tag(TAG).i("onPrevClick: From " + currentDay + " To " + previousDay);
                 } else {
                     previousDay = DAYS.get(5);
-                    day_name = previousDay;
-                    day_tv.setText(previousDay);
-                    dataset.clear();
+                    current_day_name = previousDay;
+                    mDayTv.setText(previousDay);
+                    mDataSet.clear();
                     if (isOnline) {
                         loadFromServerData(previousDay);
                     } else {
                         loadFromSyncedData(previousDay);
                     }
-                    Log.i(TAG, "onPrevClick: Day Saturday is set !");
+                    Timber.tag(TAG).i("onPrevClick: Day Saturday is set !");
                 }
             }
-            if (day_name.equals("SUNDAY")) {
-                currentDay = day_name;
+            if (current_day_name.equals("SUNDAY")) {
+                currentDay = current_day_name;
                 previousDay = DAYS.get(6);
-                day_name = previousDay;
-                day_tv.setText(previousDay);
-                dataset.clear();
-//                loadFromServerData(nextday);
-                Log.i(TAG, "onPrevClick: From (Sunday)" + currentDay + " To " + previousDay);
+                current_day_name = previousDay;
+                mDayTv.setText(previousDay);
+                mDataSet.clear();
+                Timber.tag(TAG).i("onPrevClick: From (Sunday)" + currentDay + " To " + previousDay);
             }
-            if (day_name.equals("SATURDAY")) {
-                currentDay = day_name;
+            if (current_day_name.equals("SATURDAY")) {
+                currentDay = current_day_name;
                 previousDay = DAYS.get(5);
-                day_name = previousDay;
-                day_tv.setText(previousDay);
-                dataset.clear();
+                current_day_name = previousDay;
+                mDayTv.setText(previousDay);
+                mDataSet.clear();
                 if (isOnline) {
                     loadFromServerData(previousDay);
                 } else {
                     loadFromSyncedData(previousDay);
                 }
-                Log.i(TAG, "onPrevClick: From (Saturday)" + currentDay + " To " + previousDay);
+                Timber.tag(TAG).i("onPrevClick: From (Saturday)" + currentDay + " To " + previousDay);
             }
         }
     }
@@ -466,7 +415,8 @@ public class Home extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.sett) {
-            Toast.makeText(this, "It's Setting", Toast.LENGTH_SHORT).show();
+            BatchDialog();
+            Timber.i("Setting is clicked");
         }
         return super.onOptionsItemSelected(item);
     }
@@ -474,5 +424,10 @@ public class Home extends AppCompatActivity {
     @Override
     protected void attachBaseContext(Context newBase) {
         super.attachBaseContext(CalligraphyContextWrapper.wrap(newBase));
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
     }
 }

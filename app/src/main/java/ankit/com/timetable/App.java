@@ -1,13 +1,12 @@
 package ankit.com.timetable;
 
 
-import android.os.StrictMode;
-
 import com.activeandroid.ActiveAndroid;
 import com.activeandroid.Configuration;
 import com.activeandroid.app.Application;
 import com.parse.Parse;
 
+import timber.log.Timber;
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 
 /**
@@ -19,17 +18,8 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         if (BuildConfig.DEBUG) {
-            StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-                    .detectNetwork()
-                    .detectDiskReads()
-                    .detectDiskWrites()
-                    .penaltyLog()
-                    .build());
-            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                    .detectActivityLeaks()
-                    .detectLeakedClosableObjects()
-                    .penaltyLog()
-                    .build());
+            Timber.plant(new Timber.DebugTree());
+            Timber.i("Debug Timber is Planted");
         }
         Configuration configuration = new Configuration.Builder(this).setDatabaseName("table.db").create();
         ActiveAndroid.initialize(configuration, true);

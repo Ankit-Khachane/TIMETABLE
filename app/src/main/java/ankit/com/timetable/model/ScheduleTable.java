@@ -1,7 +1,5 @@
 package ankit.com.timetable.model;
 
-import android.util.Log;
-
 import com.activeandroid.Model;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.annotation.Table;
@@ -9,11 +7,14 @@ import com.activeandroid.query.Select;
 
 import java.util.List;
 
+import timber.log.Timber;
+
 /**
  * Created by khach on 12-12-2017.
  */
 @Table(name = "scheduleTable")
-public class DatabaseService extends Model {
+public class ScheduleTable extends Model {
+    private static final String TAG = "DatabaseService";
     @Column(name = "seq")
     private int SEQ;
     @Column(name = "monday")
@@ -27,7 +28,7 @@ public class DatabaseService extends Model {
     @Column(name = "friday")
     private String FRIDAY;
 
-    public DatabaseService() {
+    public ScheduleTable() {
         super();
     }
 
@@ -89,28 +90,28 @@ public class DatabaseService extends Model {
         }
     }
 
-    public List<DatabaseService> getDaySchedule(String day_selected) {
-        List<DatabaseService> col = null;
+    public List<ScheduleTable> getDaySchedule(String day_selected) {
+        List<ScheduleTable> col = null;
         String raw;
         if (day_selected.equals("MONDAY")) {
-            col = new Select("Id,monday").from(DatabaseService.class).orderBy("Id ASC").execute();
-            Log.i("DatabaseService", "getDaySchedule: column Monday");
+            col = new Select("Id,monday").from(ScheduleTable.class).orderBy("Id ASC").execute();
+            Timber.tag(TAG).i("getDaySchedule: column Monday");
         }
         if (day_selected.equals("TUESDAY")) {
-            col = new Select("Id,tuesday").from(DatabaseService.class).orderBy("Id ASC").execute();
-            Log.i("DatabaseService", "getDaySchedule: column Tuesday");
+            col = new Select("Id,tuesday").from(ScheduleTable.class).orderBy("Id ASC").execute();
+            Timber.tag(TAG).i("getDaySchedule: column Tuesday");
         }
         if (day_selected.equals("WEDNESDAY")) {
-            col = new Select("Id,wednesday").from(DatabaseService.class).orderBy("Id ASC").execute();
-            Log.i("DatabaseService", "getDaySchedule: column Wednesday");
+            col = new Select("Id,wednesday").from(ScheduleTable.class).orderBy("Id ASC").execute();
+            Timber.tag(TAG).i("getDaySchedule: column Wednesday");
         }
         if (day_selected.equals("THURSDAY")) {
-            col = new Select("Id,thursday").from(DatabaseService.class).orderBy("Id ASC").execute();
-            Log.i("DatabaseService", "getDaySchedule: column Thursday");
+            col = new Select("Id,thursday").from(ScheduleTable.class).orderBy("Id ASC").execute();
+            Timber.tag(TAG).i("getDaySchedule: column Thursday");
         }
         if (day_selected.equals("FRIDAY")) {
-            col = new Select("Id,friday").from(DatabaseService.class).orderBy("Id ASC").execute();
-            Log.i("DatabaseService", "getDaySchedule: column Friday");
+            col = new Select("Id,friday").from(ScheduleTable.class).orderBy("Id ASC").execute();
+            Timber.tag(TAG).i("getDaySchedule: column Friday");
         }
         return col;
     }

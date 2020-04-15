@@ -9,16 +9,16 @@ public class ScheduleData {
     private String roomNumber;
     private String subject;
     private String type;
-    private String professor;
+    private String teacher;
 
     public ScheduleData() {
     }
 
-    public ScheduleData(String time, String roomNumber, String subject, String professor, String type) {
+    public ScheduleData(String time, String roomNumber, String subject, String teacher, String type) {
         this.time = time;
         this.roomNumber = roomNumber;
         this.subject = subject;
-        this.professor = professor;
+        this.teacher = teacher;
         this.type = type;
     }
 
@@ -46,12 +46,12 @@ public class ScheduleData {
         this.subject = subject;
     }
 
-    public String getProfessor() {
-        return professor;
+    public String getTeacher() {
+        return teacher;
     }
 
-    public void setProfessor(String professor) {
-        this.professor = professor;
+    public void setTeacher(String teacher) {
+        this.teacher = teacher;
     }
 
     public String getType() {

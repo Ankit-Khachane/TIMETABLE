@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/detail_dialog"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <!--create a elegant dialog to show details of clicked schedule entry
+     and add button to set reminder through notification in future-->
+
+</RelativeLayout>

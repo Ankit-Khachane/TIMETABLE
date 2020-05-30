@@ -1,4 +1,4 @@
-package ankit.com.timetable.model;
+package com.ankit.timetable.local;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -10,7 +10,7 @@ import static android.content.Context.MODE_PRIVATE;
  * Created by khach on 16-07-2017.
  */
 
-public class PreferenceService {
+public class PreferenceHelper {
     private static final String PREFERENCE_TIMETABLE = "PREFERENCE_TIMETABLE";
     private static final String KEY_FIRST_STARTUP = "FIRST_STARTUP";
     private static final String KEY_DATA_SYNCED = "DATA_SYNCED";
@@ -21,7 +21,7 @@ public class PreferenceService {
 
 
     @SuppressLint("CommitPrefEdits")
-    public PreferenceService(Context context) {
+    public PreferenceHelper(Context context) {
 
         sharedPreferences = context.getSharedPreferences(PREFERENCE_TIMETABLE, MODE_PRIVATE);
         editor = sharedPreferences.edit();

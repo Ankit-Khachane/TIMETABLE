@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/round_corner_background"
-    tools:context="ankit.com.timetable.view.Home">
+    tools:context="com.ankit.timetable.view.Home">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/tb_home"
@@ -43,19 +43,19 @@
         android:orientation="horizontal">
 
         <ImageButton
-            android:layout_marginStart="10dp"
             android:id="@+id/previous"
             fontPath="fonts/Montserrat-Medium.otf"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/previous_button"
+            android:layout_marginStart="10dp"
             android:background="@drawable/arrow_background"
+            android:contentDescription="@string/previous_button"
             android:onClick="onPrevClick"
             android:padding="5dp"
-            app:srcCompat="@drawable/arrow_left"
             android:textColor="@android:color/white"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:srcCompat="@drawable/arrow_left" />
 
         <TextView
             android:id="@+id/dayname"
@@ -72,18 +72,18 @@
 
         <ImageButton
             android:id="@+id/next"
-            android:layout_marginEnd="10dp"
             fontPath="fonts/Montserrat-Medium.otf"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/next_button"
+            android:layout_marginEnd="10dp"
             android:background="@drawable/arrow_background"
+            android:contentDescription="@string/next_button"
             android:onClick="onNextClick"
             android:padding="5dp"
-            app:srcCompat="@drawable/arrow_right"
             android:textColor="@android:color/white"
             android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:srcCompat="@drawable/arrow_right" />
     </LinearLayout>
 
     <ListView
@@ -103,11 +103,11 @@
 
     <ImageView
         android:id="@+id/empty_view"
-        android:contentDescription="@string/default_placeholder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/main_list"
         android:layout_gravity="center"
+        android:contentDescription="@string/default_placeholder"
         android:padding="60dp"
         android:scaleType="fitCenter"
         android:src="@drawable/empty_view"

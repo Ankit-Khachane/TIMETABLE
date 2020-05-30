@@ -42,19 +42,33 @@ android {
 }
 
 dependencies {
+    def room_version = "2.2.5"
+    def lifecycle_version = "2.2.0"
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    //androidx library
     implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+    // ViewModel
+    implementation "androidx.lifecycle:lifecycle-viewmodel:$lifecycle_version"
+    // LiveData
+    implementation "androidx.lifecycle:lifecycle-livedata:$lifecycle_version"
+    //parse sdk
     implementation 'com.github.parse-community.Parse-SDK-Android:parse:1.18.5'
+    //library for font support
     implementation 'uk.co.chrisjenx:calligraphy:2.3.0'
-    implementation 'com.michaelpardo:activeandroid:3.1.0-SNAPSHOT'
-    implementation 'com.yarolegovich:lovely-dialog:1.1.0'
+    //logging library
     implementation 'com.jakewharton.timber:timber:4.7.1'
-    implementation 'com.blankj:utilcodex:1.28.0'
-
-
+    //utility tool library
+    implementation 'com.blankj:utilcodex:1.28.1'
+    //fancy dialog library
+    implementation 'com.yarolegovich:lovely-dialog:1.1.0'
+    //database debug library
     debugImplementation 'com.amitshekhar.android:debug-db:1.0.6'
+
     testImplementation 'junit:junit:4.13'
-    androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
+    androidTestImplementation('androidx.test.espresso:espresso-core:3.2.0', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 

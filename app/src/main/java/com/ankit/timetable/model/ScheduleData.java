@@ -1,10 +1,11 @@
-package ankit.com.timetable.model;
+package com.ankit.timetable.model;
 
 /**
  * Created by khach on 18-07-2017.
  */
 
 public class ScheduleData {
+
     private String time;
     private String roomNumber;
     private String subject;
@@ -14,7 +15,11 @@ public class ScheduleData {
     public ScheduleData() {
     }
 
-    public ScheduleData(String time, String roomNumber, String subject, String teacher, String type) {
+    public ScheduleData(String time,
+                        String roomNumber,
+                        String subject,
+                        String teacher,
+                        String type) {
         this.time = time;
         this.roomNumber = roomNumber;
         this.subject = subject;
